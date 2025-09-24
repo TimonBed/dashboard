@@ -1,0 +1,69 @@
+{
+  "id": "tablet-dashboard",
+  "title": "Tablet Dashboard",
+  "path": "/tabletdashboard",
+  "description": "Optimized for tablet use with large controls",
+  "icon": "Tablet",
+  "backgroundColor": "bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900",
+  "columns": [
+    {
+      "id": "lights-column",
+      "title": "Light Controls",
+      "gridColumns": {
+        "sm": 2,
+        "md": 2,
+        "lg": 2,
+        "xl": 2
+      },
+      "cards": [
+        {
+          "id": "light-1",
+          "type": "light-switch",
+          "title": "Kitchen Light",
+          "entityId": "light.kitchen",
+          "position": { "x": 0, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        },
+        {
+          "id": "light-2",
+          "type": "light-switch",
+          "title": "Bedroom Light",
+          "entityId": "light.bedroom",
+          "position": { "x": 1, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        }
+      ]
+    },
+    {
+      "id": "sensors-column",
+      "title": "Sensors",
+      "gridColumns": {
+        "sm": 2,
+        "md": 2,
+        "lg": 2,
+        "xl": 2
+      },
+      "cards": [
+        {
+          "id": "temperature-sensor",
+          "type": "sensor-state",
+          "title": "Temperature",
+          "entityId": "sensor.temperature",
+          "position": { "x": 0, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        },
+        {
+          "id": "humidity-sensor",
+          "type": "sensor-state",
+          "title": "Humidity",
+          "entityId": "sensor.humidity",
+          "position": { "x": 1, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        }
+      ]
+    }
+  ],
+  "layout": "grid",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-01T00:00:00Z"
+}

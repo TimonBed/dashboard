@@ -1,0 +1,61 @@
+{
+  "id": "main-dashboard",
+  "title": "Main Dashboard",
+  "path": "/dashboard",
+  "description": "Primary dashboard with sensors and controls",
+  "icon": "Home",
+  "backgroundColor": "bg-gradient-to-br from-gray-900 via-gray-800 to-slate-900",
+  "columns": [
+    {
+      "id": "sensors-column",
+      "title": "Sensors",
+      "gridColumns": {
+        "sm": 2,
+        "md": 2,
+        "lg": 2,
+        "xl": 2
+      },
+      "cards": [
+        {
+          "id": "temperature-sensor",
+          "type": "sensor-state",
+          "title": "Temperature",
+          "entityId": "sensor.living_room_temperature",
+          "position": { "x": 0, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        },
+        {
+          "id": "humidity-sensor",
+          "type": "sensor-state",
+          "title": "Humidity",
+          "entityId": "sensor.living_room_humidity",
+          "position": { "x": 1, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        }
+      ]
+    },
+    {
+      "id": "controls-column",
+      "title": "Controls",
+      "gridColumns": {
+        "sm": 2,
+        "md": 2,
+        "lg": 2,
+        "xl": 2
+      },
+      "cards": [
+        {
+          "id": "living-room-light",
+          "type": "light-switch",
+          "title": "Living Room Light",
+          "entityId": "light.living_room",
+          "position": { "x": 0, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        }
+      ]
+    }
+  ],
+  "layout": "grid",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-01T00:00:00Z"
+}

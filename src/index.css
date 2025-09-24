@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-gray-600/20;
+  }
+
+  body {
+    @apply text-white;
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    min-height: 100vh;
+  }
+
+  #root {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-gradient-to-br from-gray-800/40 to-gray-900/20 rounded-2xl shadow-xl border border-gray-600/20 p-6 backdrop-blur-sm;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:border-gray-500/30;
+  }
+
+  .status-online {
+    @apply bg-gradient-to-br from-green-900/20 to-green-800/10 text-green-100 border-green-500/30;
+  }
+
+  .status-offline {
+    @apply bg-gradient-to-br from-red-900/20 to-red-800/10 text-red-100 border-red-500/30;
+  }
+
+  .status-unknown {
+    @apply bg-gradient-to-br from-gray-800/40 to-gray-900/20 text-gray-200 border-gray-600/30;
+  }
+
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-400 via-green-400 to-yellow-400 bg-clip-text text-transparent;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

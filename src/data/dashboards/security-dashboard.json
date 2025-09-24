@@ -1,0 +1,258 @@
+{
+  "id": "security-dashboard",
+  "title": "Security Dashboard",
+  "path": "/security",
+  "description": "Security monitoring and door/window sensors",
+  "icon": "Shield",
+  "backgroundColor": "gradient: #0f0f0f, #1a1a1a, #0f0f0f",
+  "columns": [
+    {
+      "id": "doors-column",
+      "title": "Doors",
+      "gridColumns": {
+        "sm": 1,
+        "md": 2,
+        "lg": 2,
+        "xl": 4
+      },
+      "cards": [
+        {
+          "id": "front-door",
+          "type": "sensor-state",
+          "title": "Haustür",
+          "entityId": "binary_sensor.eve_door_20ebn9901_door_2",
+          "position": { "x": 1, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        },
+        {
+          "id": "back-door",
+          "type": "sensor-state",
+          "title": "Balkontür",
+          "entityId": "binary_sensor.balkon_tur_door",
+          "position": { "x": 1, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        },
+        {
+          "id": "living-room-window",
+          "type": "sensor-state",
+          "title": "Schlafzimmer Tür",
+          "entityId": "binary_sensor.eve_door_20ebn9901_door",
+          "position": { "x": 2, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        },
+        {
+          "id": "living-room-shutters",
+          "type": "shutter",
+          "title": "Schlafzimmer Rollo",
+          "entityId": "cover.rollo_cover",
+          "position": { "x": 0, "y": 1 },
+          "size": { "width": 1, "height": 1 }
+        }
+      ]
+    },
+    {
+      "id": "schlafzimmer-column",
+      "title": "Schlafzimmer",
+      "gridColumns": {
+        "sm": 1,
+        "md": 2,
+        "lg": 2,
+        "xl": 4
+      },
+    "badges": [
+    {
+        "id": "humidity",
+        "title": "Humidity",
+        "icon": "droplets",
+        "entityId": "sensor.eve_room_a52b_humidity"
+    },
+    {
+        "id": "air-quality",
+        "title": "Air Quality",
+        "icon": "air-quality",
+        "entityId": "sensor.eve_room_a52b_air_quality"
+    },
+    {
+        "id": "temperature",
+        "title": "Temperature",
+        "icon": "thermometer",
+        "entityId": "sensor.eve_room_a52b_temperature"
+    }
+    ],
+      "cards": [
+        {
+          "id": "lb0801-e-light",
+          "type": "light-switch",
+          "title": "Deckenlicht",
+          "entityId": "light.lb0801_e_light",
+          "position": { "x": 0, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        },
+        {
+          "id": "zigbee-controller-light",
+          "type": "light-switch",
+          "title": "Zigbee Controller Light",
+          "entityId": "light.zigbee_controller_light",
+          "position": { "x": 0, "y": 1 },
+          "size": { "width": 1, "height": 1 }
+        },
+        {
+          "id": "kuche-licht",
+          "type": "light-switch",
+          "title": "Küche Licht",
+          "entityId": "light.kuche_licht",
+          "position": { "x": 1, "y": 0 },
+          "size": { "width": 1, "height": 1 }
+        },
+        {
+          "id": "doorman-open-entrance-door",
+          "type": "button",
+          "title": "Tür Öffnen",
+          "entityId": "button.doorman_s3_open_entrance_door",
+          "position": { "x": 1, "y": 1 },
+          "size": { "width": 1, "height": 1 },
+          "vibrationDuration": 3,
+          "iconName": "door"
+        },
+        {
+          "id": "timonpc-hibernate",
+          "type": "button",
+          "title": "Timon PC Hibernate",
+          "entityId": "button.timonpc_timonpc_hibernate",
+          "position": { "x": 1, "y": 2 },
+          "size": { "width": 1, "height": 1 },
+          "vibrationDuration": 3,
+          "iconName": "pc"
+        },
+        {
+          "id": "annapc-hibernate",
+          "type": "button",
+          "title": "Anna PC Hibernate",
+          "entityId": "button.annapc_annapc_hibernate",
+          "position": { "x": 1, "y": 3 },
+          "size": { "width": 1, "height": 1 },
+          "vibrationDuration": 3,
+          "iconName": "pc"
+        },
+        {
+          "id": "abfall",
+          "type": "trash",
+          "title": "Abfall",
+          "entities": [
+            { "entity": "sensor.abfuhr_gelbe_wertstofftonne_sack" },
+            { "entity": "sensor.abfuhr_schwarze_restmulltonne" },
+            { "entity": "sensor.abfuhr_grune_biotonne" },
+            { "entity": "sensor.abfuhr_blaue_papiertonne" }
+          ],
+          "position": { "x": 1, "y": 4 },
+          "size": { "width": 2, "height": 2 },
+          "vibrationDuration": 3,
+          "iconName": "trash",
+          "showIcon": false,
+          "showTitle": false,
+          "showSubtitle": false
+        },
+        {
+        "id": "timer-card",
+        "type": "time-remaining",
+        "title": "Spühlmaschiene",
+        "entityId": "timer.geschirrspuler_remaining_program_time",
+        "position": { "x": 1, "y": 1 },
+        "size": { "width": 1, "height": 1 }
+        },
+        {
+        "id": "timer-card2",
+        "type": "time-remaining",
+        "title": "Trockner",
+        "entityId": "timer.153931628965879_time_remaining",
+        "position": { "x": 1, "y": 1 },
+        "size": { "width": 1, "height": 1 }
+        },
+        {
+        "id": "waschmaschiene",
+        "type": "sensor-state",
+        "title": "Waschmaschiene",
+        "entityId": "binary_sensor.waschmaschiene",
+        "position": { "x": 1, "y": 1 },
+        "size": { "width": 1, "height": 1 }
+        },
+        {
+        "id": "garage-door",
+        "type": "binary-switch",
+        "title": "Auto Open Door",
+        "entityId": "switch.doorman_s3_ring_to_open",
+        "position": { "x": 0, "y": 2 },
+        "size": { "width": 1, "height": 1 }
+        },
+        {
+        "id": "anna-location",
+        "type": "person",
+        "title": "Anna",
+        "entityId": "person.anna",
+        "position": { "x": 0, "y": 0 },
+        "size": { "width": 1, "height": 1 }
+        },
+        {
+        "id": "timon-location",
+        "type": "person",
+        "title": "Timon",
+        "entityId": "person.timon",
+        "position": { "x": 0, "y": 0 },
+        "size": { "width": 1, "height": 1 }
+        },
+        {
+        "id": "uptime-home-assistant",
+        "type": "uptime",
+        "title": "Home Assistant",
+        "entityId": "sensor.home_assistant_status",
+        "position": { "x": 1, "y": 0 },
+        "size": { "width": 1, "height": 1 },
+        "uptimeSettings": {
+          "segmentDuration": "hours",
+          "segmentCount": 7
+        }
+        },
+        {
+        "id": "uptime-food",
+        "type": "uptime",
+        "title": "Mealie Food",
+        "entityId": "sensor.food_status",
+        "position": { "x": 1, "y": 0 },
+        "size": { "width": 1, "height": 1 },
+        "uptimeSettings": {
+          "segmentDuration": "hours",
+          "segmentCount": 7
+        }
+        },
+        {
+        "id": "helios-ventilation",
+        "type": "helios-ventilation",
+        "title": "Belüftungsanlage",
+        "entityId": "climate.helios_ventilation",
+        "position": { "x": 0, "y": 1 },
+        "size": { "width": 2, "height": 2 },
+        "heliosSettings": {
+          "indoorAirEntity": "sensor.kwl_220_d_l_indoor_temperature",
+          "supplyAirEntity": "sensor.kwl_220_d_l_supply_temperature", 
+          "outdoorAirEntity": "sensor.kwl_220_d_l_outside_temperature",
+          "exhaustAirEntity": "sensor.kwl_220_d_l_exhaust_temperature",
+          "fanSpeedEntity": "sensor.kwl_220_d_l_current_fan_speed",
+          "buttonStateEntity": "select.select_state_of_the_kwl"
+        }
+      },
+      {
+        "id": "bus-departures",
+        "type": "bus-departure",
+        "title": "Bus Abfahrten",
+        "entityId": "sensor.moosberg_pflegezentrum_abfahrten",
+        "position": { "x": 0, "y": 3 },
+        "size": { "width": 2, "height": 2 },
+        "maxDepartures": 5
+      }
+      ]
+    }
+  ],
+  "layout": "grid",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-01T00:00:00Z"
+}
