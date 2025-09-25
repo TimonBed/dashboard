@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Shield, Check, X, Clock, Activity, BarChart3 } from "lucide-react";
+import { Check, X, Clock, Activity, BarChart3 } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 
@@ -22,7 +22,6 @@ export const UptimeCard: React.FC<UptimeCardProps> = ({
   onTitleChange,
   className = "",
   width = "w-full",
-  height = "h-16",
   uptimeSettings = { segmentDuration: "hours", segmentCount: 6 },
 }) => {
   const { entities } = useHomeAssistantStore();
@@ -98,7 +97,6 @@ export const UptimeCard: React.FC<UptimeCardProps> = ({
   };
 
   const uptimePercentage = getUptimePercentage();
-  const filledSegments = segmentStatus.filter((status) => status === true).length; // Count of online segments
 
   // Get status color
   const getStatusColor = () => {

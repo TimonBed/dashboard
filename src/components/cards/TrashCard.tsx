@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Trash2, Calendar, Clock } from "lucide-react";
+import React, { memo, useMemo } from "react";
+import { Trash2 } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import Badge from "../ui/Badge";
@@ -16,11 +16,10 @@ export interface TrashCardProps {
   showSubtitle?: boolean;
 }
 
-export const TrashCard: React.FC<TrashCardProps> = ({
+const TrashCardComponent: React.FC<TrashCardProps> = ({
   title,
   entities,
   onTitleChange,
-  className = "",
   width = "w-full",
   height = "h-32",
   showIcon = true,
@@ -28,32 +27,10 @@ export const TrashCard: React.FC<TrashCardProps> = ({
   showSubtitle = true,
 }) => {
   const { entities: haEntities } = useHomeAssistantStore();
-  const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Update time every second for relative time display
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Get relative time string
-  const getRelativeTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const diffInSeconds = Math.floor((currentTime.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 0) return "Just now";
-    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    const days = Math.floor(diffInSeconds / 86400);
-    return `${days}d ago`;
-  };
-
-  // Get trash collection data
-  const getTrashData = () => {
-    const trashItems = entities
+  // Get trash collection data - memoized to prevent recalculation
+  const trashData = useMemo(() => {
+    return entities
       .map(({ entity }) => {
         const haEntity = haEntities.get(entity);
         if (!haEntity) return null;
@@ -76,13 +53,10 @@ export const TrashCard: React.FC<TrashCardProps> = ({
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
+  }, [entities, haEntities]);
 
-    return trashItems;
-  };
-
-  // Get the next collection (lowest daysTo)
-  const getNextCollection = () => {
-    const trashData = getTrashData();
+  // Get the next collection (lowest daysTo) - memoized
+  const nextCollection = useMemo(() => {
     const availableItems = trashData.filter((item) => !item.isUnavailable && item.daysTo !== null);
 
     if (availableItems.length === 0) return null;
@@ -92,13 +66,11 @@ export const TrashCard: React.FC<TrashCardProps> = ({
       const currentDays = current.daysTo ?? Infinity;
       return currentDays < nextDays ? current : next;
     });
-  };
+  }, [trashData]);
 
-  // Get subtitle text
-  const getSubtitle = () => {
-    const nextCollection = getNextCollection();
+  // Get subtitle text - memoized
+  const subtitle = useMemo(() => {
     if (!nextCollection) {
-      const trashData = getTrashData();
       const unavailableCount = trashData.filter((item) => item.isUnavailable).length;
       if (unavailableCount > 0) return `${unavailableCount} unavailable`;
       return "No data";
@@ -110,7 +82,7 @@ export const TrashCard: React.FC<TrashCardProps> = ({
     if (days === 1) return "Morgen";
     if (days === 2) return "Übermorgen";
     return `in ${days} Tagen`;
-  };
+  }, [nextCollection, trashData]);
 
   // Get badge variant for trash collection
   const getBadgeVariant = (item: any) => {
@@ -121,13 +93,12 @@ export const TrashCard: React.FC<TrashCardProps> = ({
     return "green";
   };
 
-  const trashData = getTrashData();
-  const nextCollection = getNextCollection();
+  // Use memoized data
 
   return (
     <Card
       title={showTitle ? title : ""}
-      subtitle={showSubtitle ? getSubtitle() : ""}
+      subtitle={showSubtitle ? subtitle : ""}
       icon={showIcon ? <Trash2 className="w-5 h-5" /> : undefined}
       onTitleChange={onTitleChange}
       width={width}
@@ -164,3 +135,6 @@ export const TrashCard: React.FC<TrashCardProps> = ({
     </Card>
   );
 };
+
+// Memoize the component to prevent unnecessary re-renders
+export const TrashCard = memo(TrashCardComponent);

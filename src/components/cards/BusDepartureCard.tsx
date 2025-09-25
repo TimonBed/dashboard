@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Bus, Clock } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
@@ -122,21 +122,17 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
     return `${diffHours}h ${remainingMinutes}min`;
   };
 
-  // Get line color based on line number (Hamburg specific)
-  const getLineColor = (line: string): string => {
-    const lineNum = parseInt(line);
-    if (lineNum >= 600) return "bg-blue-600"; // Night buses
-    if (lineNum >= 200) return "bg-green-600"; // 200-series buses
-    return "bg-red-600"; // 100-series buses (Hamburg standard)
-  };
-
   // Get line background style for Hamburg hexagon design
-  const getLineBackgroundStyle = (line: string): React.CSSProperties => {
-    // All Hamburg bus lines use the official red color #E2001A
+  const getLineBackgroundStyle = (lineNumber: string): React.CSSProperties => {
+    // 6xx bus lines use gray color, others use Hamburg red
+    const is6xx = lineNumber.startsWith("6");
+    const backgroundColor = is6xx ? "#6B7280" : "#E2001A";
+    const gradientColor = is6xx ? "#9CA3AF" : "#ff1a1a";
+
     return {
-      background: "linear-gradient(135deg, #E2001A 0%, #ff1a1a 100%)",
+      background: `linear-gradient(135deg, ${backgroundColor} 0%, ${gradientColor} 100%)`,
       clipPath: "polygon(20% 0, 80% 0, 100% 50%, 80% 100%, 20% 100%, 0 50%)",
-      boxShadow: "0 0 8px rgba(226, 0, 26, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+      boxShadow: `0 0 8px rgba(${is6xx ? "107, 114, 128" : "226, 0, 26"}, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
     };
   };
 
@@ -171,7 +167,7 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
             </div>
           </div>
         ) : (
-          departures.map((departure, index) => {
+          departures.map((departure) => {
             const timeRemaining = getTimeRemaining(departure.departure);
             const delayed = isDelayed(departure);
             const cancelled = isCancelled(departure);

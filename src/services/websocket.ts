@@ -1,5 +1,40 @@
 import { EntityState } from "../types/homeassistant";
 
+// Simple performance monitoring
+let messageCount = 0;
+let lastMessageTime = 0;
+let messageTimes: number[] = [];
+
+export const recordWebSocketMessage = () => {
+  messageCount++;
+  const now = Date.now();
+  if (lastMessageTime > 0) {
+    messageTimes.push(now - lastMessageTime);
+    if (messageTimes.length > 100) {
+      messageTimes = messageTimes.slice(-50); // Keep only last 50
+    }
+  }
+  lastMessageTime = now;
+};
+
+export const getWebSocketStats = () => {
+  const now = Date.now();
+  const recentMessages = messageTimes.filter((time) => now - time < 10000); // Last 10 seconds
+  const messageRate = recentMessages.length > 0 ? 1000 / (recentMessages.reduce((a, b) => a + b, 0) / recentMessages.length) : 0;
+
+  return {
+    totalMessages: messageCount,
+    messageRate: messageRate,
+    averageInterval: messageTimes.length > 0 ? messageTimes.reduce((a, b) => a + b, 0) / messageTimes.length : 0,
+  };
+};
+
+export const resetWebSocketStats = () => {
+  messageCount = 0;
+  lastMessageTime = 0;
+  messageTimes = [];
+};
+
 interface DebugMessage {
   id: string;
   timestamp: Date;
@@ -10,6 +45,7 @@ interface DebugMessage {
 }
 
 export class HomeAssistantWebSocket {
+  private static instance: HomeAssistantWebSocket | null = null;
   private ws: WebSocket | null = null;
   private accessToken: string;
   private url: string;
@@ -19,23 +55,43 @@ export class HomeAssistantWebSocket {
   private eventHandlers = new Map<string, ((data: any) => void)[]>();
   private debugMessages: DebugMessage[] = [];
   private debugListeners = new Set<(messages: DebugMessage[]) => void>();
+  private retryCount = 0;
+  private maxRetries = 5;
+  private retryDelay = 2000; // 2 seconds
 
   constructor(url: string, accessToken: string) {
     this.url = url;
     this.accessToken = accessToken;
   }
 
+  public static getInstance(url: string, accessToken: string): HomeAssistantWebSocket {
+    if (!HomeAssistantWebSocket.instance) {
+      HomeAssistantWebSocket.instance = new HomeAssistantWebSocket(url, accessToken);
+    }
+    return HomeAssistantWebSocket.instance;
+  }
+
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
+      // If already connected, resolve immediately
+      if (this.isConnected()) {
+        resolve();
+        return;
+      }
+
       if (this.isConnecting) return;
 
       this.isConnecting = true;
-      console.log("Connecting to WebSocket:", this.url);
+      if (this.retryCount === 0) {
+        console.log("Connecting to WebSocket:", this.url);
+      } else {
+        console.log(`Retrying WebSocket connection (attempt ${this.retryCount + 1}/${this.maxRetries}):`, this.url);
+      }
 
       const timeout = setTimeout(() => {
         this.ws?.close();
         this.isConnecting = false;
-        reject(new Error("Connection timeout"));
+        this.handleConnectionError(new Error("Connection timeout"), resolve, reject);
       }, 10000);
 
       this.ws = new WebSocket(this.url);
@@ -45,6 +101,9 @@ export class HomeAssistantWebSocket {
       this.ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
+
+          // Record message for performance monitoring
+          recordWebSocketMessage();
 
           this.addDebugMessage({
             type: message.type === "event" ? "event" : "response",
@@ -61,6 +120,7 @@ export class HomeAssistantWebSocket {
               console.log("✓ WebSocket authenticated");
               this.isAuthenticated = true;
               this.isConnecting = false;
+              this.retryCount = 0; // Reset retry count on success
               clearTimeout(timeout);
               resolve();
               break;
@@ -102,13 +162,27 @@ export class HomeAssistantWebSocket {
         clearTimeout(timeout);
       };
 
-      this.ws.onerror = () => {
-        console.error("WebSocket error");
+      this.ws.onerror = (error) => {
+        // Don't log raw WebSocket errors to console - they're handled by retry logic
         this.isConnecting = false;
         clearTimeout(timeout);
-        reject(new Error("WebSocket connection failed"));
+        this.handleConnectionError(new Error("WebSocket connection failed"), resolve, reject);
       };
     });
+  }
+
+  private handleConnectionError(error: Error, resolve: (value: void) => void, reject: (reason?: any) => void) {
+    this.retryCount++;
+
+    if (this.retryCount < this.maxRetries) {
+      console.log(`WebSocket connection attempt ${this.retryCount}/${this.maxRetries} failed, retrying in ${this.retryDelay}ms...`);
+      setTimeout(() => {
+        this.connect().then(resolve).catch(reject);
+      }, this.retryDelay);
+    } else {
+      console.error(`WebSocket connection failed after ${this.maxRetries} attempts:`, error.message);
+      reject(new Error(`WebSocket connection failed after ${this.maxRetries} attempts: ${error.message}`));
+    }
   }
 
   private sendAuth() {
@@ -213,6 +287,7 @@ export class HomeAssistantWebSocket {
     this.ws = null;
     this.isAuthenticated = false;
     this.isConnecting = false;
+    this.retryCount = 0; // Reset retry count on disconnect
     this.eventHandlers.clear();
   }
 

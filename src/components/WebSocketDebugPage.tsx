@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Activity, Wifi, WifiOff, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useHomeAssistantStore } from "../store/useHomeAssistantStore";
 import { useHomeAssistant } from "../hooks/useHomeAssistant";
+import { PerformanceDashboard } from "./PerformanceDashboard";
 
 interface WebSocketMessage {
   id: string;
@@ -226,7 +227,7 @@ export const WebSocketDebugPage: React.FC = () => {
         </div>
 
         {/* Stats Panel */}
-        <div className="w-64 bg-white border-l border-gray-200 overflow-y-auto">
+        <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
           <div className="p-4">
             <h3 className="text-base font-medium text-gray-900 mb-3">Connection Info</h3>
 
@@ -264,6 +265,14 @@ export const WebSocketDebugPage: React.FC = () => {
                 <div className="text-xs text-gray-600">
                   {entities.size} total, {sensors.length} sensors
                 </div>
+              </div>
+            </div>
+
+            {/* Performance Dashboard */}
+            <div className="mt-6">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Performance Metrics</h4>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <PerformanceDashboard />
               </div>
             </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo, useMemo, useCallback } from "react";
 import { MapPin, Home, Car, Plane, Train, Ship, Building, User } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
@@ -16,7 +16,7 @@ export interface PersonCardProps {
   showSubtitle?: boolean;
 }
 
-export const PersonCard: React.FC<PersonCardProps> = ({
+const PersonCardComponent: React.FC<PersonCardProps> = ({
   title,
   entityId,
   onTitleChange,
@@ -32,7 +32,6 @@ export const PersonCard: React.FC<PersonCardProps> = ({
   const haEntity = entities.get(entityId);
   const isUnavailable = haEntity ? haEntity.state === "unavailable" : false;
   const currentLocation = haEntity?.state || "unknown";
-  const attributes = haEntity?.attributes || {};
 
   // Update time every second for relative time display
   useEffect(() => {
@@ -42,8 +41,8 @@ export const PersonCard: React.FC<PersonCardProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Get location icon based on current location
-  const getLocationIcon = () => {
+  // Get location icon based on current location - memoized
+  const locationIcon = useMemo(() => {
     if (isUnavailable) return <User className="w-5 h-5 text-red-400" />;
 
     const location = currentLocation.toLowerCase();
@@ -63,10 +62,10 @@ export const PersonCard: React.FC<PersonCardProps> = ({
     } else {
       return <MapPin className="w-5 h-5 text-gray-400" />;
     }
-  };
+  }, [isUnavailable, currentLocation]);
 
-  // Get location variant for Badge
-  const getLocationVariant = () => {
+  // Get location variant for Badge - memoized
+  const locationVariant = useMemo(() => {
     if (isUnavailable) return "red";
 
     const location = currentLocation.toLowerCase();
@@ -86,22 +85,25 @@ export const PersonCard: React.FC<PersonCardProps> = ({
     } else {
       return "gray";
     }
-  };
+  }, [isUnavailable, currentLocation]);
 
-  // Get relative time since last changed
-  const getRelativeTime = (timestamp: string) => {
-    const lastChanged = new Date(timestamp);
-    const diffInSeconds = Math.floor((currentTime.getTime() - lastChanged.getTime()) / 1000);
+  // Get relative time since last changed - memoized
+  const getRelativeTime = useCallback(
+    (timestamp: string) => {
+      const lastChanged = new Date(timestamp);
+      const diffInSeconds = Math.floor((currentTime.getTime() - lastChanged.getTime()) / 1000);
 
-    if (diffInSeconds < 0) return "Just now";
-    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    return `${Math.floor(diffInSeconds / 86400)} days ago`;
-  };
+      if (diffInSeconds < 0) return "Just now";
+      if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+      return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    },
+    [currentTime]
+  );
 
-  // Get subtitle text
-  const getSubtitle = () => {
+  // Get subtitle text - memoized
+  const subtitle = useMemo(() => {
     if (isUnavailable) return "Unavailable";
     if (!haEntity) return "No data";
 
@@ -111,10 +113,10 @@ export const PersonCard: React.FC<PersonCardProps> = ({
     }
 
     return "No timestamp";
-  };
+  }, [isUnavailable, haEntity, getRelativeTime]);
 
-  // Get card background color based on location
-  const getCardBackground = () => {
+  // Get card background color based on location - memoized
+  const cardBackground = useMemo(() => {
     if (isUnavailable) return "bg-gradient-to-br from-red-900/20 to-red-800/20";
     if (!haEntity) return "bg-gradient-to-br from-gray-900/90 to-gray-800/90";
 
@@ -127,21 +129,21 @@ export const PersonCard: React.FC<PersonCardProps> = ({
     if (location.includes("ship") || location.includes("boat")) return "bg-gradient-to-br from-cyan-900/20 to-cyan-800/20";
     if (location.includes("work") || location.includes("office")) return "bg-gradient-to-br from-orange-900/20 to-orange-800/20";
     return "bg-gradient-to-br from-gray-900/90 to-gray-800/90";
-  };
+  }, [isUnavailable, haEntity, currentLocation]);
 
   return (
     <Card
       title={showTitle ? title : ""}
-      subtitle={showSubtitle ? getSubtitle() : ""}
-      icon={showIcon ? getLocationIcon() : undefined}
+      subtitle={showSubtitle ? subtitle : ""}
+      icon={showIcon ? locationIcon : undefined}
       onTitleChange={onTitleChange}
-      className={`${getCardBackground()} ${className}`}
+      className={`${cardBackground} ${className}`}
       width={width}
       height={height}
     >
       {/* Location details on right side */}
       <div className="absolute top-1/2 right-4 transform -translate-y-1/2 flex items-center space-x-2">
-        <Badge variant={getLocationVariant()}>
+        <Badge variant={locationVariant}>
           <span className="text-sm font-semibold capitalize">
             {currentLocation === "unknown" ? "Unknown" : currentLocation === "not_home" ? "Away" : currentLocation}
           </span>
@@ -150,3 +152,6 @@ export const PersonCard: React.FC<PersonCardProps> = ({
     </Card>
   );
 };
+
+// Memoize the component to prevent unnecessary re-renders
+export const PersonCard = memo(PersonCardComponent);

@@ -65,6 +65,10 @@ function App() {
   const activeTab = location.pathname;
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
 
+  // Check URL parameters for sidebar visibility
+  const urlParams = new URLSearchParams(location.search);
+  const hideSidebar = urlParams.get("sidebar") === "false" || urlParams.get("hidesidebar") === "true";
+
   useEffect(() => {
     const loadedDashboards = dashboardService.getAllDashboards();
     setDashboards(loadedDashboards);
@@ -87,8 +91,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar activeTab={activeTab} onTabChange={() => {}} />
-      <div className="flex-1 ml-16">
+      {!hideSidebar && <Sidebar activeTab={activeTab} onTabChange={() => {}} />}
+      <div className={`flex-1 ${hideSidebar ? "ml-0" : "ml-16"}`}>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<MainDashboard />} />

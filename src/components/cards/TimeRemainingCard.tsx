@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Clock, Timer } from "lucide-react";
+import { Timer } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 
@@ -39,7 +39,6 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
   }, []);
 
   const haEntity = entities.get(entityId);
-  const isUnavailable = haEntity ? haEntity.state === "unavailable" : false;
 
   // Calculate remaining time
   const getRemainingTime = () => {

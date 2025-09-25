@@ -12,7 +12,7 @@ import { UptimeCard } from "./cards/UptimeCard";
 import { HeliosVentilationCard } from "./cards/HeliosVentilationCard";
 import { BusDepartureCard } from "./cards/BusDepartureCard";
 import { useHomeAssistantStore } from "../store/useHomeAssistantStore";
-import { Droplets, Thermometer, Lightbulb, FileText, Wind } from "lucide-react";
+import { Droplets, Thermometer, Lightbulb, FileText, Wind, Bed, ChefHat, Bath, Printer, Sofa, Info, Sun } from "lucide-react";
 
 interface DynamicDashboardProps {
   dashboard: Dashboard;
@@ -22,7 +22,6 @@ interface DynamicDashboardProps {
 export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, onCardTitleChange }) => {
   const { entities } = useHomeAssistantStore();
 
-  // Get icon based on badge icon name
   const getIcon = (iconName: string) => {
     const iconMap: { [key: string]: React.ReactNode } = {
       droplets: <Droplets className="w-4 h-4" />,
@@ -30,9 +29,17 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       lightbulb: <Lightbulb className="w-4 h-4" />,
       filetext: <FileText className="w-4 h-4" />,
       "air-quality": <Wind className="w-4 h-4" />,
+      bed: <Bed className="w-4 h-4" />,
+      "chef-hat": <ChefHat className="w-4 h-4" />,
+      bath: <Bath className="w-4 h-4" />,
+      printer: <Printer className="w-4 h-4" />,
+      sofa: <Sofa className="w-4 h-4" />,
+      info: <Info className="w-4 h-4" />,
+      sun: <Sun className="w-4 h-4" />,
     };
     return iconMap[iconName] || <FileText className="w-4 h-4" />;
   };
+
   const renderCard = (card: any) => {
     const commonProps = {
       title: card.title,
@@ -40,62 +47,90 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       onTitleChange: onCardTitleChange ? (title: string, entityId?: string) => onCardTitleChange(card.id, title, entityId) : undefined,
     };
 
-    // Get width and height classes based on card size
     const getSizeClasses = () => {
+      if (dashboard.layout === "masonry") return "w-full h-full";
       const widthClass = card.size?.width === 2 ? "col-span-2" : "w-full";
-      const heightClass = card.size?.height === 2 ? "row-span-2" : "";
-      return `${widthClass} ${heightClass}`.trim();
+      return widthClass;
     };
 
-    const cardElement = (() => {
-      switch (card.type) {
-        case "light-switch":
-          return <LightSwitchCard key={card.id} {...commonProps} />;
-        case "sensor-state":
-          return <SensorStateCard key={card.id} {...commonProps} />;
-        case "button":
-          return <ButtonCard key={card.id} {...commonProps} vibrationDuration={card.vibrationDuration} iconName={card.iconName} />;
-        case "shutter":
-          return <ShutterCard key={card.id} {...commonProps} />;
-        case "trash":
-          return (
-            <TrashCard
-              key={card.id}
-              {...commonProps}
-              entities={card.entities}
-              height={card.size?.height === 2 ? "h-32" : "h-16"}
-              showIcon={card.showIcon}
-              showTitle={card.showTitle}
-              showSubtitle={card.showSubtitle}
-            />
-          );
-        case "time-remaining":
-          return <TimeRemainingCard key={card.id} {...commonProps} showIcon={card.showIcon} showTitle={card.showTitle} showSubtitle={card.showSubtitle} />;
-        case "binary-switch":
-          return <BinarySwitchCard key={card.id} {...commonProps} showIcon={card.showIcon} showTitle={card.showTitle} showSubtitle={card.showSubtitle} />;
-        case "person":
-          return <PersonCard key={card.id} {...commonProps} showIcon={card.showIcon} showTitle={card.showTitle} showSubtitle={card.showSubtitle} />;
-        case "uptime":
-          return <UptimeCard key={card.id} {...commonProps} uptimeSettings={card.uptimeSettings} />;
-        case "helios-ventilation":
-          return <HeliosVentilationCard key={card.id} {...commonProps} heliosSettings={card.heliosSettings} />;
-        case "bus-departure":
-          return <BusDepartureCard key={card.id} {...commonProps} maxDepartures={card.maxDepartures} />;
-        default:
-          return null;
-      }
-    })();
+    const cardComponents: { [key: string]: React.ComponentType<any> } = {
+      "light-switch": LightSwitchCard,
+      "sensor-state": SensorStateCard,
+      button: ButtonCard,
+      shutter: ShutterCard,
+      trash: TrashCard,
+      "time-remaining": TimeRemainingCard,
+      "binary-switch": BinarySwitchCard,
+      person: PersonCard,
+      uptime: UptimeCard,
+      "helios-ventilation": HeliosVentilationCard,
+      "bus-departure": BusDepartureCard,
+    };
 
-    return cardElement ? (
+    const CardComponent = cardComponents[card.type];
+    if (!CardComponent) {
+      console.warn(`Unknown card type: ${card.type} for card ID: ${card.id}`);
+      return null;
+    }
+
+    const extraProps = {
+      ...(card.type === "trash" && {
+        entities: card.entities,
+        height: card.size?.height === 2 ? "h-32" : "h-16",
+        showIcon: card.showIcon,
+        showTitle: card.showTitle,
+        showSubtitle: card.showSubtitle,
+      }),
+      ...(card.type === "uptime" && { uptimeSettings: card.uptimeSettings }),
+      ...(card.type === "helios-ventilation" && { heliosSettings: card.heliosSettings }),
+      ...(card.type === "bus-departure" && { maxDepartures: card.maxDepartures }),
+      ...(card.type === "button" && { vibrationDuration: card.vibrationDuration, iconName: card.iconName }),
+    };
+
+    return (
       <div key={card.id} className={getSizeClasses()}>
-        {cardElement}
+        <CardComponent {...commonProps} {...extraProps} />
       </div>
-    ) : null;
+    );
   };
+
+  const formatSensorValue = (badge: any) => {
+    const entity = entities.get(badge.entityId);
+    if (!entity) return null;
+
+    const state = entity.state;
+    const unit = entity.attributes?.unit_of_measurement || "";
+
+    let displayValue = state;
+    if (badge.entityId.includes("temperature") || badge.entityId.includes("temp")) {
+      displayValue = `${parseFloat(state).toFixed(1)}°C`;
+    } else if (badge.entityId.includes("humidity")) {
+      displayValue = `${parseFloat(state).toFixed(1)}%`;
+    } else if (unit) {
+      displayValue = `${state} ${unit}`;
+    }
+
+    return (
+      <div key={badge.id} className="flex items-center space-x-1 text-gray-300">
+        {getIcon(badge.icon)}
+        <span className="text-sm">{displayValue}</span>
+      </div>
+    );
+  };
+
+  const renderSectionHeader = (section: any) => (
+    <div className="flex items-end justify-between mb-4 h-16 pb-2">
+      <div className="flex items-center space-x-2">
+        {section.icon && getIcon(section.icon)}
+        <h2 className="text-xl font-semibold text-white">{section.title}</h2>
+      </div>
+      {section.badges?.length > 0 && <div className="flex items-center space-x-4">{section.badges.map(formatSensorValue)}</div>}
+    </div>
+  );
 
   return (
     <div
-      className={`min-h-screen p-6`}
+      className="min-h-screen p-6"
       style={{
         background: dashboard.backgroundColor?.startsWith("#")
           ? dashboard.backgroundColor
@@ -106,76 +141,35 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
             })()
           : dashboard.backgroundColor === "bg-gray-950"
           ? "#030712"
-          : dashboard.backgroundColor === "bg-gray-900"
-          ? "#111827"
-          : dashboard.backgroundColor === "bg-black"
-          ? "#000000"
-          : undefined,
+          : "#0f0f0f",
       }}
     >
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2">{dashboard.title}</h1>
-        {dashboard.description && <p className="text-gray-300">{dashboard.description}</p>}
-      </div>
-
       <div className="grid grid-cols-2 gap-6">
-        {dashboard.columns.map((column) => {
-          // Generate responsive grid classes for cards
-          const getGridClasses = () => {
-            if (!column.gridColumns) return "grid-cols-1";
-
-            const classes: string[] = [];
-            if (column.gridColumns.sm) classes.push(`sm:grid-cols-${column.gridColumns.sm}`);
-            if (column.gridColumns.md) classes.push(`md:grid-cols-${column.gridColumns.md}`);
-            if (column.gridColumns.lg) classes.push(`lg:grid-cols-${column.gridColumns.lg}`);
-            if (column.gridColumns.xl) classes.push(`xl:grid-cols-${column.gridColumns.xl}`);
-
-            return classes.length > 0 ? `grid grid-cols-1 ${classes.join(" ")}` : "grid grid-cols-1";
-          };
-
-          return (
-            <div key={column.id} className="w-full">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-white">{column.title}</h2>
-
-                {/* Sensor data on the right */}
-                {column.badges && column.badges.length > 0 && (
-                  <div className="flex items-center space-x-4">
-                    {column.badges.map((badge) => {
-                      const entity = entities.get(badge.entityId);
-                      if (!entity) return null;
-
-                      const state = entity.state;
-                      const attributes = entity.attributes || {};
-                      const unit = attributes.unit_of_measurement || "";
-
-                      // Format the value based on the sensor type
-                      let displayValue = state;
-                      if (badge.entityId.includes("temperature") || badge.entityId.includes("temp")) {
-                        displayValue = `${parseFloat(state).toFixed(1)}°C`;
-                      } else if (badge.entityId.includes("humidity")) {
-                        displayValue = `${parseFloat(state).toFixed(1)}%`;
-                      } else if (badge.entityId.includes("light") || badge.entityId.includes("brightness")) {
-                        displayValue = state === "on" ? "1" : "0";
-                      } else if (unit) {
-                        displayValue = `${state} ${unit}`;
-                      }
-
-                      return (
-                        <div key={badge.id} className="flex items-center space-x-1 text-gray-300">
-                          {getIcon(badge.icon)}
-                          <span className="text-sm">{displayValue}</span>
+        {dashboard.columns.map((column) => (
+          <div key={column.id} className="space-y-2">
+            {column.cards.map((roomSection) => {
+              if (roomSection.type === "room-section") {
+                return (
+                  <div key={roomSection.id} className="space-y-1.5">
+                    {renderSectionHeader(roomSection)}
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+                      {roomSection.cards.map((card) => (
+                        <div key={card.id} className={card.size?.width === 2 ? "col-span-2" : "col-span-1"}>
+                          {renderCard(card)}
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                )}
-              </div>
-
-              <div className={`${getGridClasses()} gap-4 auto-rows-min`}>{column.cards.map((card) => renderCard(card))}</div>
-            </div>
-          );
-        })}
+                );
+              }
+              return (
+                <div key={roomSection.id} className="space-y-2">
+                  {renderCard(roomSection)}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -17,10 +17,7 @@ interface CardProps {
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  (
-    { title, subtitle, icon, children, onClick, onTitleChange, entityId, disabled = false, className = "", width = "w-80", height = "h-16", onMouseDown },
-    ref
-  ) => {
+  ({ title, subtitle, icon, children, onClick, onTitleChange, entityId, disabled = false, width = "w-80", height = "h-16", onMouseDown }, ref) => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [currentTitle, setCurrentTitle] = useState(title);
     const [currentEntityId, setCurrentEntityId] = useState(entityId);
@@ -47,7 +44,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       <>
         <div
           ref={ref}
-          className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl w-full rounded-2xl border border-gray-700/50 shadow-2xl transition-all duration-500 group relative overflow-hidden ${
+          className={`bg-[#1D1D1D] backdrop-blur-xl w-full rounded-2xl shadow-2xl transition-all duration-500 group relative overflow-hidden ${
             onClick ? "cursor-pointer" : ""
           } ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${width} ${height}  p-3`}
           onClick={disabled ? undefined : onClick}

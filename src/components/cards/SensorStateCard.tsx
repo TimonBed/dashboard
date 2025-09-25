@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { memo, useMemo, useCallback } from "react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { Activity, Thermometer, Droplets, Gauge, Zap, Wifi, DoorOpen, DoorClosed } from "lucide-react";
+import { useCurrentTime } from "../../hooks/useCurrentTime";
 
 interface SensorStateCardProps {
   title: string;
@@ -9,27 +10,18 @@ interface SensorStateCardProps {
   onTitleChange?: (title: string, entityId?: string) => void;
 }
 
-export const SensorStateCard: React.FC<SensorStateCardProps> = ({ title, entityId, onTitleChange }) => {
+const SensorStateCardComponent: React.FC<SensorStateCardProps> = ({ title, entityId, onTitleChange }) => {
   const { entities } = useHomeAssistantStore();
   const haEntity = entityId ? entities.get(entityId) : null;
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Update current time every 30 seconds to refresh relative time display
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 30000); // Update every 30 seconds
-
-    return () => clearInterval(interval);
-  }, []);
+  const currentTime = useCurrentTime(30000); // Update every 30 seconds
 
   // Error boundary for entity data
   if (entityId && !haEntity) {
     console.warn(`SensorStateCard: Entity ${entityId} not found in Home Assistant data`);
   }
 
-  // Get sensor icon based on entity type or attributes
-  const getSensorIcon = () => {
+  // Get sensor icon based on entity type or attributes - memoized
+  const sensorIcon = useMemo(() => {
     if (!haEntity) return Activity;
 
     const entityId = haEntity.entity_id.toLowerCase();
@@ -73,7 +65,7 @@ export const SensorStateCard: React.FC<SensorStateCardProps> = ({ title, entityI
 
     // Default to activity icon
     return Activity;
-  };
+  }, [haEntity]);
 
   // Get icon color based on sensor type and state
   const getIconColor = () => {
@@ -109,61 +101,6 @@ export const SensorStateCard: React.FC<SensorStateCardProps> = ({ title, entityI
     // Binary sensors (connectivity, motion, etc.)
     if (deviceClass === "connectivity" || deviceClass === "motion") {
       return state === "on" ? "text-green-500" : "text-red-500";
-    }
-
-    // Default color
-    return "text-blue-500";
-  };
-
-  // Get sensor value with unit
-  const getSensorValue = () => {
-    if (!haEntity) return "No data";
-
-    const state = haEntity.state;
-    const unit = haEntity.attributes.unit_of_measurement;
-    const deviceClass = haEntity.attributes.device_class;
-    const entityId = haEntity.entity_id.toLowerCase();
-
-    if (state === "unavailable" || state === "unknown") {
-      return state;
-    }
-
-    // For door/window sensors, show OPEN/CLOSED instead of on/off
-    if (deviceClass === "door" || deviceClass === "window" || entityId.includes("door") || entityId.includes("window")) {
-      return state === "on" ? "OPEN" : "CLOSED";
-    }
-
-    return unit ? `${state} ${unit}` : state;
-  };
-
-  // Get sensor status color
-  const getStatusColor = () => {
-    if (!haEntity) return "text-gray-400";
-
-    const state = haEntity.state;
-    const deviceClass = haEntity.attributes.device_class;
-
-    // Binary sensors (on/off)
-    if (deviceClass === "connectivity" || deviceClass === "motion" || deviceClass === "door" || deviceClass === "window") {
-      return state === "on" ? "text-green-500" : "text-red-500";
-    }
-
-    // Temperature sensors
-    if (deviceClass === "temperature") {
-      const temp = parseFloat(state);
-      if (isNaN(temp)) return "text-gray-400";
-      if (temp < 0) return "text-blue-500";
-      if (temp > 30) return "text-red-500";
-      return "text-orange-500";
-    }
-
-    // Humidity sensors
-    if (deviceClass === "humidity") {
-      const humidity = parseFloat(state);
-      if (isNaN(humidity)) return "text-gray-400";
-      if (humidity < 30) return "text-red-500";
-      if (humidity > 70) return "text-blue-500";
-      return "text-green-500";
     }
 
     // Default color
@@ -214,45 +151,47 @@ export const SensorStateCard: React.FC<SensorStateCardProps> = ({ title, entityI
     return "Active";
   };
 
-  try {
-    const IconComponent = getSensorIcon();
-    const iconColor = getIconColor();
-    const sensorValue = getSensorValue();
-    const statusColor = getStatusColor();
+  // Get relative time since last changed - memoized
+  const getRelativeTime = useCallback(
+    (timestamp: string) => {
+      const now = currentTime;
+      const lastChanged = new Date(timestamp);
+      const diffInSeconds = Math.floor((now.getTime() - lastChanged.getTime()) / 1000);
+
+      if (diffInSeconds < 60) {
+        return `${diffInSeconds}s ago`;
+      } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `${minutes}m ago`;
+      } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `${hours}h ago`;
+      } else {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `${days}d ago`;
+      }
+    },
+    [currentTime]
+  );
+
+  // Get subtitle text - memoized
+  const subtitle = useMemo(() => {
+    if (!haEntity) return "No data";
+
     const statusText = getStatusText();
+    const lastChanged = haEntity.last_changed ? getRelativeTime(haEntity.last_changed) : "Unknown";
 
-    // Create subtitle with state and last changed info
-    const getSubtitle = () => {
-      if (!haEntity) return "No data";
+    return `${statusText} • ${lastChanged}`;
+  }, [haEntity, getRelativeTime]);
 
-      const getRelativeTime = (timestamp: string) => {
-        const now = currentTime;
-        const lastChanged = new Date(timestamp);
-        const diffInSeconds = Math.floor((now.getTime() - lastChanged.getTime()) / 1000);
-
-        if (diffInSeconds < 60) {
-          return `${diffInSeconds}s ago`;
-        } else if (diffInSeconds < 3600) {
-          const minutes = Math.floor(diffInSeconds / 60);
-          return `${minutes}m ago`;
-        } else if (diffInSeconds < 86400) {
-          const hours = Math.floor(diffInSeconds / 3600);
-          return `${hours}h ago`;
-        } else {
-          const days = Math.floor(diffInSeconds / 86400);
-          return `${days}d ago`;
-        }
-      };
-
-      const lastChanged = haEntity.last_changed ? getRelativeTime(haEntity.last_changed) : "Unknown";
-
-      return `${statusText} • ${lastChanged}`;
-    };
+  try {
+    const IconComponent = sensorIcon;
+    const iconColor = getIconColor();
 
     return (
       <Card
         title={title}
-        subtitle={getSubtitle()}
+        subtitle={subtitle}
         icon={
           <IconComponent
             className={`w-6 h-6 ${iconColor} drop-shadow-lg`}
@@ -292,3 +231,6 @@ export const SensorStateCard: React.FC<SensorStateCardProps> = ({ title, entityI
     );
   }
 };
+
+// Memoize the component to prevent unnecessary re-renders
+export const SensorStateCard = memo(SensorStateCardComponent);
