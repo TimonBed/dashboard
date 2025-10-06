@@ -15,8 +15,22 @@ export interface DashboardColumn {
     lg?: number; // large screens
     xl?: number; // extra large screens
   };
-  cards: DashboardCard[];
+  cards: (DashboardCard | RoomSection)[];
   badges?: Badge[];
+}
+
+export interface RoomSection {
+  id: string;
+  type: "room-section";
+  cards: DashboardCard[];
+  position: {
+    x: number;
+    y: number;
+  };
+  size: {
+    width: number;
+    height: number;
+  };
 }
 
 export interface DashboardCard {
@@ -32,9 +46,12 @@ export interface DashboardCard {
     | "person"
     | "uptime"
     | "helios-ventilation"
-    | "bus-departure";
+    | "bus-departure"
+    | "room-header";
   title: string;
   entityId?: string;
+  icon?: string;
+  badges?: Badge[];
   position: {
     x: number;
     y: number;
