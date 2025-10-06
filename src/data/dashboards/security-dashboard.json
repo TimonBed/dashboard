@@ -93,7 +93,7 @@
                   "entityId": "sensor.presence_sensor_fp2_a596_light_sensor_light_level"
                 }
               ],
-              "position": { "x": 0, "y": 0 },
+              "position": { "x": 0, "y": 3 },
               "size": { "width": 2, "height": 1 }
             },
             {
@@ -101,7 +101,7 @@
               "type": "light-switch",
               "title": "Küche Lichter",
               "entityId": "light.kuche_licht",
-              "position": { "x": 0, "y": 1 },
+              "position": { "x": 0, "y": 4 },
               "size": { "width": 1, "height": 1 }
             },
             {
@@ -109,7 +109,7 @@
               "type": "time-remaining",
               "title": "Spühlmaschiene",
               "entityId": "timer.geschirrspuler_remaining_program_time",
-              "position": { "x": 1, "y": 0 },
+              "position": { "x": 1, "y": 4 },
               "size": { "width": 1, "height": 1 }
             },
             {
@@ -117,7 +117,7 @@
               "type": "sensor-state",
               "title": "Küche Leerlauf",
               "entityId": "binary_sensor.kuche_idle",
-              "position": { "x": 0, "y": 1 },
+              "position": { "x": 0, "y": 5 },
               "size": { "width": 2, "height": 1 }
             }
           ],
@@ -147,7 +147,7 @@
                   "entityId": "sensor.kuche_temperatur_temperature"
                 }
               ],
-              "position": { "x": 0, "y": 0 },
+              "position": { "x": 0, "y": 6 },
               "size": { "width": 2, "height": 1 }
             },
             {
@@ -155,7 +155,7 @@
               "type": "sensor-state",
               "title": "Waschmaschiene",
               "entityId": "binary_sensor.waschmaschiene",
-              "position": { "x": 0, "y": 1 },
+              "position": { "x": 0, "y": 7 },
               "size": { "width": 1, "height": 1 }
             },
             {
@@ -163,7 +163,7 @@
               "type": "time-remaining",
               "title": "Trockner",
               "entityId": "timer.153931628965879_time_remaining",
-              "position": { "x": 1, "y": 1 },
+              "position": { "x": 1, "y": 7 },
               "size": { "width": 1, "height": 1 }
             }
           ],
@@ -180,7 +180,7 @@
               "title": "3D Drucker",
               "icon": "printer",
               "badges": [],
-              "position": { "x": 0, "y": 0 },
+              "position": { "x": 0, "y": 8 },
               "size": { "width": 2, "height": 1 }
             },
             {
@@ -188,7 +188,7 @@
               "type": "sensor-state",
               "title": "Print Status",
               "entityId": "sensor.print_status",
-              "position": { "x": 0, "y": 1 },
+              "position": { "x": 0, "y": 9 },
               "size": { "width": 2, "height": 1 }
             }
           ],
@@ -205,7 +205,7 @@
               "title": "Wohnzimmer",
               "icon": "sofa",
               "badges": [],
-              "position": { "x": 0, "y": 0 },
+              "position": { "x": 0, "y": 10 },
               "size": { "width": 2, "height": 1 }
             },
             {
@@ -213,7 +213,7 @@
               "type": "light-switch",
               "title": "Wohnzimmer",
               "entityId": "light.wohnzimmer_light",
-              "position": { "x": 0, "y": 1 },
+              "position": { "x": 0, "y": 11 },
               "size": { "width": 2, "height": 1 }
             },
             {
@@ -221,7 +221,7 @@
               "type": "helios-ventilation",
               "title": "Belüftungsanlage",
               "entityId": "climate.helios_ventilation",
-              "position": { "x": 0, "y": 2 },
+              "position": { "x": 0, "y": 12 },
               "size": { "width": 2, "height": 2 },
               "heliosSettings": {
                 "indoorAirEntity": "sensor.kwl_220_d_l_indoor_temperature",
@@ -237,7 +237,7 @@
               "type": "button",
               "title": "Timon PC",
               "entityId": "button.timonpc_timonpc_hibernate",
-              "position": { "x": 0, "y": 4 },
+              "position": { "x": 0, "y": 16 },
               "size": { "width": 1, "height": 1 },
               "vibrationDuration": 3,
               "iconName": "pc"
@@ -247,7 +247,7 @@
               "type": "button",
               "title": "Anna PC",
               "entityId": "button.annapc_annapc_hibernate",
-              "position": { "x": 1, "y": 4 },
+              "position": { "x": 1, "y": 16  },
               "size": { "width": 1, "height": 1 },
               "vibrationDuration": 3,
               "iconName": "pc"
@@ -279,7 +279,7 @@
               "title": "General",
               "icon": "info",
               "badges": [],
-              "position": { "x": 0, "y": 0 },
+              "position": { "x": 2, "y": 0 },
               "size": { "width": 2, "height": 1 }
             },
             {
@@ -287,7 +287,7 @@
               "type": "person",
               "title": "Timon",
               "entityId": "person.timon",
-              "position": { "x": 0, "y": 1 },
+              "position": { "x": 2, "y": 1 },
               "size": { "width": 1, "height": 1 }
             },
             {
@@ -295,7 +295,7 @@
               "type": "person",
               "title": "Anna",
               "entityId": "person.anna",
-              "position": { "x": 1, "y": 1 },
+              "position": { "x": 3, "y": 1 },
               "size": { "width": 1, "height": 1 }
             },
             {
@@ -303,7 +303,7 @@
               "type": "sensor-state",
               "title": "Haustür",
               "entityId": "binary_sensor.eve_door_20ebn9901_door_2",
-              "position": { "x": 0, "y": 2 },
+              "position": { "x": 2, "y": 2 },
               "size": { "width": 1, "height": 1 }
             },
             {
@@ -311,7 +311,7 @@
               "type": "sensor-state",
               "title": "Tür Balkon",
               "entityId": "binary_sensor.balkon_tur_door",
-              "position": { "x": 1, "y": 2 },
+              "position": { "x": 3, "y": 2 },
               "size": { "width": 1, "height": 1 }
             },
             {
@@ -319,7 +319,7 @@
               "type": "sensor-state",
               "title": "Tür Schlafzimmer",
               "entityId": "binary_sensor.eve_door_20ebn9901_door",
-              "position": { "x": 0, "y": 3 },
+              "position": { "x": 2, "y": 3 },
               "size": { "width": 1, "height": 1 }
             },
             {
@@ -327,7 +327,7 @@
               "type": "button",
               "title": "Gebäudetür",
               "entityId": "button.doorman_s3_open_entrance_door",
-              "position": { "x": 1, "y": 3 },
+              "position": { "x": 3, "y": 3 },
               "size": { "width": 1, "height": 1 },
               "vibrationDuration": 3,
               "iconName": "door"
@@ -337,7 +337,7 @@
               "type": "binary-switch",
               "title": "Gebäudetür Automatik",
               "entityId": "switch.doorman_s3_ring_to_open",
-              "position": { "x": 0, "y": 4 },
+              "position": { "x": 2, "y": 4 },
               "size": { "width": 2, "height": 1 }
             }
           ],
@@ -349,7 +349,7 @@
           "type": "weather-forecast",
           "title": "Wetter",
           "entityId": "weather.home",
-          "position": { "x": 0, "y": 4 },
+          "position": { "x": 2, "y": 5 },
           "size": { "width": 2, "height": 1 }
         },
         {
@@ -357,9 +357,8 @@
           "type": "bus-departure",
           "title": "Moosberg Bus Abfahrten",
           "entityId": "sensor.moosberg_pflegezentrum_abfahrten",
-          "position": { "x": 0, "y": 5 },
-          "size": { "width": 2, "height": 1 },
-          "maxDepartures": 5
+          "position": { "x": 2, "y": 6 },
+          "size": { "width": 2, "height": 4 }
         },
         {
           "id": "abfall",
@@ -371,7 +370,7 @@
             { "entity": "sensor.abfuhr_grune_biotonne" },
             { "entity": "sensor.abfuhr_blaue_papiertonne" }
           ],
-          "position": { "x": 0, "y": 6 },
+          "position": { "x": 2, "y":10 },
           "size": { "width": 2, "height": 2 },
           "vibrationDuration": 3,
           "iconName": "trash",
@@ -380,17 +379,17 @@
           "showSubtitle": false
         },
         {
-          "id": "calendar",
-          "type": "sensor-state",
+          "id": "anna-calendar",
+          "type": "calendar",
           "title": "Kalender",
-          "entityId": "calendar.home",
-          "position": { "x": 0, "y": 8 },
-          "size": { "width": 2, "height": 1 }
+          "entityId": "calendar.anna_timon",
+          "position": { "x": 2, "y": 12 },
+          "size": { "width": 2, "height": 4 }
         }
       ]
     }
   ],
-  "layout": "masonry",
+  "layout": "grid",
   "createdAt": "2024-01-01T00:00:00Z",
   "updatedAt": "2024-01-01T00:00:00Z"
 }

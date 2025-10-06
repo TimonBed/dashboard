@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .dashboard-grid {
+    @apply w-full;
+  }
+  
+  .grid-item {
+    @apply w-full h-full;
+    min-height: 64px;
+  }
+}
+
 @layer base {
   * {
     @apply border-gray-600/20;

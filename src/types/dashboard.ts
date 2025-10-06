@@ -47,7 +47,8 @@ export interface DashboardCard {
     | "uptime"
     | "helios-ventilation"
     | "bus-departure"
-    | "room-header";
+    | "room-header"
+    | "calendar";
   title: string;
   entityId?: string;
   icon?: string;

@@ -21,7 +21,7 @@ const TrashCardComponent: React.FC<TrashCardProps> = ({
   entities,
   onTitleChange,
   width = "w-full",
-  height = "h-32",
+  height = "h-full",
   showIcon = true,
   showTitle = true,
   showSubtitle = true,

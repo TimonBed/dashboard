@@ -12,6 +12,7 @@ import { UptimeCard } from "./cards/UptimeCard";
 import { HeliosVentilationCard } from "./cards/HeliosVentilationCard";
 import { BusDepartureCard } from "./cards/BusDepartureCard";
 import { RoomHeaderCard } from "./cards/RoomHeaderCard";
+import { CalendarCard } from "./cards/CalendarCard";
 
 interface DynamicDashboardProps {
   dashboard: Dashboard;
@@ -19,6 +20,32 @@ interface DynamicDashboardProps {
 }
 
 export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, onCardTitleChange }) => {
+  // Flatten all cards from all sections and calculate grid dimensions
+  const getAllCards = () => {
+    const allCards: any[] = [];
+    let maxX = 0;
+    let maxY = 0;
+
+    dashboard.columns.forEach((column) => {
+      column.cards.forEach((roomSection) => {
+        if (roomSection.type === "room-section") {
+          roomSection.cards.forEach((card: any) => {
+            allCards.push(card);
+            maxX = Math.max(maxX, card.position.x + card.size.width);
+            maxY = Math.max(maxY, card.position.y + card.size.height);
+          });
+        } else {
+          allCards.push(roomSection);
+          maxX = Math.max(maxX, (roomSection as any).position.x + (roomSection as any).size.width);
+          maxY = Math.max(maxY, (roomSection as any).position.y + (roomSection as any).size.height);
+        }
+      });
+    });
+
+    return { allCards, maxX, maxY };
+  };
+
+  const { allCards, maxX, maxY } = getAllCards();
 
   const renderCard = (card: any) => {
     const commonProps = {
@@ -27,10 +54,6 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       onTitleChange: onCardTitleChange ? (title: string, entityId?: string) => onCardTitleChange(card.id, title, entityId) : undefined,
     };
 
-    const getSizeClasses = () => {
-      const widthClass = card.size?.width === 2 ? "col-span-2" : "w-full";
-      return widthClass;
-    };
 
     const cardComponents: { [key: string]: React.ComponentType<any> } = {
       "light-switch": LightSwitchCard,
@@ -45,6 +68,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       "helios-ventilation": HeliosVentilationCard,
       "bus-departure": BusDepartureCard,
       "room-header": RoomHeaderCard,
+      calendar: CalendarCard,
     };
 
     const CardComponent = cardComponents[card.type];
@@ -56,14 +80,12 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
     const extraProps = {
       ...(card.type === "trash" && {
         entities: card.entities,
-        height: card.size?.height === 2 ? "h-32" : "h-16",
         showIcon: card.showIcon,
         showTitle: card.showTitle,
         showSubtitle: card.showSubtitle,
       }),
       ...(card.type === "uptime" && { uptimeSettings: card.uptimeSettings }),
       ...(card.type === "helios-ventilation" && { heliosSettings: card.heliosSettings }),
-      ...(card.type === "bus-departure" && { maxDepartures: card.maxDepartures }),
       ...(card.type === "button" && { vibrationDuration: card.vibrationDuration, iconName: card.iconName }),
       ...(card.type === "room-header" && { 
         icon: card.icon, 
@@ -73,7 +95,14 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
     };
 
     return (
-      <div key={card.id} className={getSizeClasses()}>
+      <div
+        key={card.id}
+        className="grid-item"
+        style={{
+          gridColumn: `${card.position.x + 1} / span ${card.size.width}`,
+          gridRow: `${card.position.y + 1} / span ${card.size.height}`,
+        }}
+      >
         <CardComponent {...commonProps} {...extraProps} />
       </div>
     );
@@ -96,31 +125,17 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
           : "#0f0f0f",
       }}
     >
-      <div className="grid grid-cols-2 gap-6">
-        {dashboard.columns.map((column) => (
-          <div key={column.id} className="space-y-2">
-            {column.cards.map((roomSection) => {
-              if (roomSection.type === "room-section") {
-                return (
-                  <div key={roomSection.id} className="space-y-1.5">
-                    <div className="grid grid-cols-2 gap-x-2 gap-y-2">
-                      {roomSection.cards.map((card: any) => (
-                        <div key={card.id} className={card.size?.width === 2 ? "col-span-2" : "col-span-1"}>
-                          {renderCard(card)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-              return (
-                <div key={roomSection.id} className="space-y-2">
-                  {renderCard(roomSection as any)}
-                </div>
-              );
-            })}
-          </div>
-        ))}
+      <div
+        className="dashboard-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${maxX}, 1fr)`,
+          gridTemplateRows: `repeat(${maxY}, 64px)`,
+          gap: '8px',
+          height: '100%',
+        }}
+      >
+        {allCards.map((card) => renderCard(card))}
       </div>
     </div>
   );

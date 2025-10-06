@@ -10,5 +10,6 @@ export { UptimeCard } from "./UptimeCard";
 export { HeliosVentilationCard } from "./HeliosVentilationCard";
 export { BusDepartureCard } from "./BusDepartureCard";
 export { RoomHeaderCard } from "./RoomHeaderCard";
+export { CalendarCard } from "./CalendarCard";
 export { Card } from "./Card";
 export { CardSettings } from "./CardSettings";

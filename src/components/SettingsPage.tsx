@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Settings, Save, Wifi } from "lucide-react";
+import { Settings, Save, Wifi, Eye, EyeOff } from "lucide-react";
 import { useSettingsStore } from "../store/useSettingsStore";
 
 export const SettingsPage: React.FC = () => {
@@ -12,6 +12,7 @@ export const SettingsPage: React.FC = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [showToken, setShowToken] = useState(false);
 
   // Save settings using the store
   const saveSettings = async () => {
@@ -115,14 +116,27 @@ export const SettingsPage: React.FC = () => {
                 <label htmlFor="ha-token" className="block text-sm font-medium text-gray-700 mb-2">
                   Long-Lived Access Token
                 </label>
-                <input
-                  id="ha-token"
-                  type="password"
-                  value={homeAssistantToken}
-                  onChange={(e) => handleInputChange("homeAssistantToken", e.target.value)}
-                  placeholder="Enter your Home Assistant token"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                />
+                <div className="relative">
+                  <input
+                    id="ha-token"
+                    type={showToken ? "text" : "password"}
+                    value={homeAssistantToken}
+                    onChange={(e) => handleInputChange("homeAssistantToken", e.target.value)}
+                    placeholder="Enter your Home Assistant token"
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowToken(!showToken)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showToken ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
                 <p className="mt-1 text-sm text-gray-500">
                   Generate a token in Home Assistant: Profile → Long-lived access tokens
                 </p>

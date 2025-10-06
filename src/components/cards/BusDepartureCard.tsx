@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Bus, Clock, Settings, X, Save } from "lucide-react";
+import { Bus, Clock } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 
@@ -10,8 +10,6 @@ export interface BusDepartureCardProps {
   className?: string;
   width?: string;
   height?: string;
-  maxDepartures?: number;
-  showAllItems?: boolean;
 }
 
 interface BusDeparture {
@@ -32,8 +30,7 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
   onTitleChange,
   className = "",
   width = "w-full",
-  maxDepartures = 5,
-  showAllItems = false,
+  height = "h-full",
 }) => {
   const { entities } = useHomeAssistantStore();
   const haEntity = entities.get(entityId);
@@ -41,9 +38,6 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
   const [previousDepartures, setPreviousDepartures] = useState<BusDeparture[]>([]);
   const [animatingOut, setAnimatingOut] = useState<Set<string>>(new Set());
   const [animatingIn, setAnimatingIn] = useState<Set<string>>(new Set());
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [localMaxDepartures, setLocalMaxDepartures] = useState(maxDepartures);
-  const [localShowAllItems, setLocalShowAllItems] = useState(showAllItems);
 
   // Update current time every 30 seconds for live countdown (reduced frequency for performance)
   useEffect(() => {
@@ -57,9 +51,16 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
   // Get bus departures from Home Assistant entity - memoized for performance
   const departures = useMemo((): BusDeparture[] => {
     if (!haEntity?.attributes?.next) return [];
-    const allDepartures = haEntity.attributes.next;
-    return localShowAllItems ? allDepartures : allDepartures.slice(0, localMaxDepartures);
-  }, [haEntity?.attributes?.next, localShowAllItems, localMaxDepartures]);
+    
+    // Calculate max departures based on card height (accounting for header)
+    const cardHeight = height === "h-full" ? 200 : parseInt(height.replace(/[^\d]/g, '')) || 200;
+    const headerHeight = 60; // Approximate header height
+    const availableHeight = cardHeight - headerHeight;
+    const itemHeight = 28; // Height of each departure item
+    const maxDepartures = Math.max(1, Math.floor(availableHeight / itemHeight) + 2);
+    
+    return haEntity.attributes.next.slice(0, maxDepartures);
+  }, [haEntity?.attributes?.next, height]);
 
   // Handle departure animations when order changes
   useEffect(() => {
@@ -149,28 +150,6 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
     return departure.cancelled;
   }, []);
 
-  // Calculate dynamic height based on number of departures - memoized for performance
-  const calculateHeight = useMemo((): string => {
-    const itemHeight = 48; // Approximate height per departure item
-    const headerHeight = 60; // Approximate height for card header
-    const padding = 16; // Padding
-    const totalHeight = headerHeight + (departures.length * itemHeight) + padding;
-    
-    // Round up to nearest h-16 step (64px)
-    const h16Steps = Math.ceil(totalHeight / 64);
-    return `h-${h16Steps * 16}`;
-  }, [departures.length]);
-
-  // Handle right-click to open settings - memoized for performance
-  const handleRightClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsSettingsOpen(true);
-  }, []);
-
-  // Handle settings save - memoized for performance
-  const handleSaveSettings = useCallback(() => {
-    setIsSettingsOpen(false);
-  }, []);
 
   // Memoized departure item component for better performance
   const DepartureItem = React.memo(({ departure }: { departure: BusDeparture }) => {
@@ -183,17 +162,18 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
 
             return (
               <div
-                className={`flex items-center justify-between py-[3px] px-2 bg-gray-800/50 rounded-lg border border-gray-700/50 transition-all duration-300 ${
+                className={`flex items-center justify-between py-1 px-2 bg-gray-800/50 rounded-lg border border-gray-700/50 transition-all duration-300 ${
                   isAnimatingOut
                     ? "opacity-0 transform -translate-y-2"
                     : isAnimatingIn
                     ? "opacity-0 transform translate-y-2 animate-in slide-in-from-bottom-2 fade-in duration-300"
                     : "opacity-100 transform translate-y-0"
                 }`}
+                style={{ height: '28px', minHeight: '28px' }}
               >
                 {/* Line number badge with Hamburg diamond design */}
                 <div
-                  className="text-white w-10 h-5 text-xs font-bold text-center flex items-center justify-center relative"
+                  className="text-white w-8 h-4 text-xs font-bold text-center flex items-center justify-center relative"
                   style={getLineBackgroundStyle(departure.line)}
                 >
                   <span
@@ -207,36 +187,34 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
                 </div>
 
                 {/* Destination and origin */}
-                <div className="flex-1 mx-4 min-w-0">
-                  <div className="text-white font-medium truncate">
+                <div className="flex-1 mx-2 min-w-0">
+                  <div className="text-white text-sm font-medium truncate">
                     {departure.direction} <span className="text-gray-400 text-xs">from {departure.origin}</span>
                   </div>
                   {cancelled && <div className="text-red-400 text-xs font-medium">CANCELLED</div>}
                 </div>
 
                 {/* Time remaining */}
-                <div className="flex items-center space-x-1 text-white font-medium min-w-[4rem] justify-end">
-                  <Clock className="w-4 h-4" />
+                <div className="flex items-center space-x-1 text-white text-sm font-medium min-w-[3rem] justify-end">
+                  <Clock className="w-3 h-3" />
                   <span className={cancelled ? "line-through text-red-400" : ""}>{timeRemaining}</span>
-                  {delayed && <span className="text-red-400 text-sm font-bold bg-red-900/30 px-1 rounded">+{Math.round(departure.delay / 60)}</span>}
+                  {delayed && <span className="text-red-400 text-xs font-bold bg-red-900/30 px-1 rounded">+{Math.round(departure.delay / 60)}</span>}
                 </div>
               </div>
             );
   });
 
   return (
-    <>
-      <Card
-        title={title}
-        subtitle=""
-        icon={<Bus className="w-5 h-5 text-blue-400" />}
-        onTitleChange={onTitleChange}
-        className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 ${className}`}
-        width={width}
-         height={calculateHeight}
-        onMouseDown={handleRightClick}
-      >
-      <div className="flex-1 space-y-1">
+    <Card
+      title={title}
+      subtitle=""
+      icon={<Bus className="w-5 h-5 text-blue-400" />}
+      onTitleChange={onTitleChange}
+      className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 ${className}`}
+      width={width}
+      height={height}
+    >
+      <div className="flex-1 space-y-0.5 overflow-y-auto">
         {departures.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400">
             <div className="text-center">
@@ -251,88 +229,5 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
         )}
       </div>
     </Card>
-
-      {/* Custom Settings Modal */}
-      {isSettingsOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl w-96 max-w-[90vw] max-h-[90vh] overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
-                  <Settings className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-xl font-semibold text-white">Bus Departure Settings</h2>
-              </div>
-              <button onClick={() => setIsSettingsOpen(false)} className="p-2 rounded-xl bg-white/5 transition-colors">
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* Show All Items Toggle */}
-              <div>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={localShowAllItems}
-                    onChange={(e) => setLocalShowAllItems(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <span className="text-white font-medium">Show All Departures</span>
-                </label>
-                <p className="text-gray-400 text-sm mt-1 ml-7">
-                  When enabled, all available departures will be shown with dynamic height
-                </p>
-              </div>
-
-              {/* Max Departures (only show when not showing all) */}
-              {!localShowAllItems && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Maximum Departures: {localMaxDepartures}
-                  </label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="20"
-                    value={localMaxDepartures}
-                    onChange={(e) => setLocalMaxDepartures(parseInt(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-                    style={{
-                      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(localMaxDepartures / 20) * 100}%, #374151 ${(localMaxDepartures / 20) * 100}%, #374151 100%)`
-                    }}
-                  />
-                  <div className="flex justify-between text-xs text-gray-400 mt-1">
-                    <span>1</span>
-                    <span>20</span>
-                  </div>
-                </div>
-              )}
-
-            
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-700/50">
-              <button 
-                onClick={() => setIsSettingsOpen(false)} 
-                className="px-4 py-2 text-gray-400 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveSettings}
-                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg"
-              >
-                <Save className="w-4 h-4" />
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
   );
 };
