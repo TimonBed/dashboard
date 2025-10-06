@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Bug, Activity, TestTube, Tablet, Shield, Settings } from "lucide-react";
+import { Home, Bug, Activity, TestTube, Tablet, Shield, Settings, Cog } from "lucide-react";
 import { dashboardService } from "../services/dashboardService";
 import { Dashboard } from "../types/dashboard";
 
@@ -38,6 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     { id: "debug", icon: Bug, label: "WebSocket Debug", path: "/debug" },
     { id: "tests", icon: TestTube, label: "UI Tests", path: "/tests" },
     { id: "manager", icon: Settings, label: "Dashboard Manager", path: "/manager" },
+    { id: "settings", icon: Cog, label: "Settings", path: "/settings" },
   ];
 
   // Create tabs from dashboards

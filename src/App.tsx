@@ -11,6 +11,7 @@ import { UITestsPage } from "./components/UITestsPage";
 import { TabletDashboard } from "./components/TabletDashboard";
 import { DynamicDashboard } from "./components/DynamicDashboard";
 import { DashboardManager } from "./components/DashboardManager";
+import { SettingsPage } from "./components/SettingsPage";
 import { useHomeAssistant } from "./hooks/useHomeAssistant";
 import { dashboardService } from "./services/dashboardService";
 import { Dashboard } from "./types/dashboard";
@@ -100,6 +101,7 @@ function App() {
           <Route path="/debug" element={<WebSocketDebugPage />} />
           <Route path="/tests" element={<UITestsPage />} />
           <Route path="/manager" element={<DashboardManager onDashboardChange={handleDashboardChange} />} />
+          <Route path="/settings" element={<SettingsPage />} />
           {dashboards.map(renderDashboardRoute)}
         </Routes>
       </div>

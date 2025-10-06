@@ -1,15 +1,13 @@
 import { useEffect, useRef } from "react";
 import { HomeAssistantWebSocket } from "../services/websocket";
 import { useHomeAssistantStore } from "../store/useHomeAssistantStore";
+import { useSettingsStore } from "../store/useSettingsStore";
 import { StateChangedEvent } from "../types/homeassistant";
-
-const WS_URL = "ws://192.168.1.4:8123/api/websocket";
-const ACCESS_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzMWY2YjBiYjNlNGU0ZTJjODExMmY4ZWYyZDZjMTg3ZCIsImlhdCI6MTc1ODU3OTA3NiwiZXhwIjoyMDczOTM5MDc2fQ.2u_j6Ho_qj5EvuApGCye9Qbzl29be539VUjt67bWDIQ";
 
 // Global connection state to prevent multiple connection attempts
 let globalConnectionAttempted = false;
 let globalWsInstance: HomeAssistantWebSocket | null = null;
+let lastConnectionSettings = "";
 
 export const useHomeAssistant = () => {
   const wsRef = useRef<HomeAssistantWebSocket | null>(null);
@@ -19,16 +17,64 @@ export const useHomeAssistant = () => {
   const retryDelay = 2000; // 2 seconds
   const { setEntities, updateEntity, setConnected, setLoading, setError, setConnectionType, setWebSocketError, isConnected, isLoading, error } =
     useHomeAssistantStore();
+  const { homeAssistantIP, homeAssistantToken, getHomeAssistantURL } = useSettingsStore();
+
+  // Build WebSocket URL from settings
+  const getWebSocketURL = () => {
+    if (!homeAssistantIP) return "";
+    
+    // If it's already a full URL, convert to WebSocket
+    if (homeAssistantIP.startsWith('http')) {
+      return homeAssistantIP.replace(/^https?:\/\//, 'ws://').replace(/^http:\/\//, 'ws://') + '/api/websocket';
+    }
+    
+    // Check if port is already included
+    const hasPort = homeAssistantIP.includes(':');
+    const isDomain = homeAssistantIP.includes('.') || homeAssistantIP === 'localhost';
+    const protocol = homeAssistantIP === "localhost" ? "ws" : "wss";
+    
+    if (hasPort) {
+      // Port is already included, just add protocol and path
+      return `${protocol}://${homeAssistantIP}/api/websocket`;
+    } else if (isDomain) {
+      // Domain without port, use default ports
+      return `${protocol}://${homeAssistantIP}/api/websocket`;
+    } else {
+      // IP address without port, add default port
+      return `${protocol}://${homeAssistantIP}:80/api/websocket`;
+    }
+  };
 
   useEffect(() => {
-    // If global connection already attempted, just use the existing instance
-    if (globalConnectionAttempted && globalWsInstance) {
+    // Don't connect if no settings are configured
+    if (!homeAssistantIP || !homeAssistantToken) {
+      setError("Please configure Home Assistant settings first");
+      setLoading(false);
+      return;
+    }
+
+    // Create a settings key to detect changes
+    const currentSettings = `${homeAssistantIP}:${homeAssistantToken}`;
+    
+    // If settings changed, reset global state
+    if (lastConnectionSettings && lastConnectionSettings !== currentSettings) {
+      globalConnectionAttempted = false;
+      globalWsInstance = null;
+      if (wsRef.current) {
+        wsRef.current.disconnect();
+        wsRef.current = null;
+      }
+      hasConnectedRef.current = false;
+    }
+
+    // If global connection already attempted with same settings, just use the existing instance
+    if (globalConnectionAttempted && globalWsInstance && lastConnectionSettings === currentSettings) {
       wsRef.current = globalWsInstance;
       hasConnectedRef.current = true;
       return;
     }
 
-    // Prevent multiple connections
+    // Prevent multiple connections with same settings
     if (wsRef.current || hasConnectedRef.current) {
       return;
     }
@@ -38,9 +84,17 @@ export const useHomeAssistant = () => {
         setLoading(true);
         setError(null);
 
+        const wsUrl = getWebSocketURL();
+        if (!wsUrl) {
+          throw new Error("Invalid WebSocket URL configuration");
+        }
+        
+        console.log("Connecting to WebSocket with URL:", wsUrl);
+
         // Mark global connection as attempted
         globalConnectionAttempted = true;
-        wsRef.current = HomeAssistantWebSocket.getInstance(WS_URL, ACCESS_TOKEN);
+        lastConnectionSettings = currentSettings;
+        wsRef.current = HomeAssistantWebSocket.getInstance(wsUrl, homeAssistantToken);
         globalWsInstance = wsRef.current;
 
         // Connect and authenticate
@@ -106,7 +160,7 @@ export const useHomeAssistant = () => {
         hasConnectedRef.current = false;
       }
     };
-  }, []);
+  }, [homeAssistantIP, homeAssistantToken]);
 
   const reconnect = () => {
     if (wsRef.current) {
@@ -117,6 +171,7 @@ export const useHomeAssistant = () => {
     retryCountRef.current = 0; // Reset retry count
     globalConnectionAttempted = false; // Reset global state
     globalWsInstance = null;
+    lastConnectionSettings = ""; // Reset settings tracking
     window.location.reload();
   };
 

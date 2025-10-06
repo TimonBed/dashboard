@@ -65,9 +65,8 @@ export class HomeAssistantWebSocket {
   }
 
   public static getInstance(url: string, accessToken: string): HomeAssistantWebSocket {
-    if (!HomeAssistantWebSocket.instance) {
-      HomeAssistantWebSocket.instance = new HomeAssistantWebSocket(url, accessToken);
-    }
+    // Always create a new instance to handle URL changes
+    HomeAssistantWebSocket.instance = new HomeAssistantWebSocket(url, accessToken);
     return HomeAssistantWebSocket.instance;
   }
 
