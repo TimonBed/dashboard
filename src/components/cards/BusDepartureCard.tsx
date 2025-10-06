@@ -174,54 +174,54 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
 
   // Memoized departure item component for better performance
   const DepartureItem = React.memo(({ departure }: { departure: BusDeparture }) => {
-    const timeRemaining = getTimeRemaining(departure.departure);
-    const delayed = isDelayed(departure);
-    const cancelled = isCancelled(departure);
-    const departureId = `${departure.id}-${departure.departure}`;
-    const isAnimatingOut = animatingOut.has(departureId);
-    const isAnimatingIn = animatingIn.has(departureId);
+            const timeRemaining = getTimeRemaining(departure.departure);
+            const delayed = isDelayed(departure);
+            const cancelled = isCancelled(departure);
+            const departureId = `${departure.id}-${departure.departure}`;
+            const isAnimatingOut = animatingOut.has(departureId);
+            const isAnimatingIn = animatingIn.has(departureId);
 
-    return (
-      <div
-        className={`flex items-center justify-between py-[3px] px-2 bg-gray-800/50 rounded-lg border border-gray-700/50 transition-all duration-300 ${
-          isAnimatingOut
-            ? "opacity-0 transform -translate-y-2"
-            : isAnimatingIn
-            ? "opacity-0 transform translate-y-2 animate-in slide-in-from-bottom-2 fade-in duration-300"
-            : "opacity-100 transform translate-y-0"
-        }`}
-      >
-        {/* Line number badge with Hamburg diamond design */}
-        <div
-          className="text-white w-10 h-5 text-xs font-bold text-center flex items-center justify-center relative"
-          style={getLineBackgroundStyle(departure.line)}
-        >
-          <span
-            className="relative z-10"
-            style={{
-              textShadow: "0 0 4px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.5)",
-            }}
-          >
-            {departure.line}
-          </span>
-        </div>
+            return (
+              <div
+                className={`flex items-center justify-between py-[3px] px-2 bg-gray-800/50 rounded-lg border border-gray-700/50 transition-all duration-300 ${
+                  isAnimatingOut
+                    ? "opacity-0 transform -translate-y-2"
+                    : isAnimatingIn
+                    ? "opacity-0 transform translate-y-2 animate-in slide-in-from-bottom-2 fade-in duration-300"
+                    : "opacity-100 transform translate-y-0"
+                }`}
+              >
+                {/* Line number badge with Hamburg diamond design */}
+                <div
+                  className="text-white w-10 h-5 text-xs font-bold text-center flex items-center justify-center relative"
+                  style={getLineBackgroundStyle(departure.line)}
+                >
+                  <span
+                    className="relative z-10"
+                    style={{
+                      textShadow: "0 0 4px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.5)",
+                    }}
+                  >
+                    {departure.line}
+                  </span>
+                </div>
 
-        {/* Destination and origin */}
-        <div className="flex-1 mx-4 min-w-0">
-          <div className="text-white font-medium truncate">
-            {departure.direction} <span className="text-gray-400 text-xs">from {departure.origin}</span>
-          </div>
-          {cancelled && <div className="text-red-400 text-xs font-medium">CANCELLED</div>}
-        </div>
+                {/* Destination and origin */}
+                <div className="flex-1 mx-4 min-w-0">
+                  <div className="text-white font-medium truncate">
+                    {departure.direction} <span className="text-gray-400 text-xs">from {departure.origin}</span>
+                  </div>
+                  {cancelled && <div className="text-red-400 text-xs font-medium">CANCELLED</div>}
+                </div>
 
-        {/* Time remaining */}
-        <div className="flex items-center space-x-1 text-white font-medium min-w-[4rem] justify-end">
-          <Clock className="w-4 h-4" />
-          <span className={cancelled ? "line-through text-red-400" : ""}>{timeRemaining}</span>
-          {delayed && <span className="text-red-400 text-sm font-bold bg-red-900/30 px-1 rounded">+{Math.round(departure.delay / 60)}</span>}
-        </div>
-      </div>
-    );
+                {/* Time remaining */}
+                <div className="flex items-center space-x-1 text-white font-medium min-w-[4rem] justify-end">
+                  <Clock className="w-4 h-4" />
+                  <span className={cancelled ? "line-through text-red-400" : ""}>{timeRemaining}</span>
+                  {delayed && <span className="text-red-400 text-sm font-bold bg-red-900/30 px-1 rounded">+{Math.round(departure.delay / 60)}</span>}
+                </div>
+              </div>
+            );
   });
 
   return (
@@ -250,7 +250,7 @@ export const BusDepartureCard: React.FC<BusDepartureCardProps> = ({
           ))
         )}
       </div>
-      </Card>
+    </Card>
 
       {/* Custom Settings Modal */}
       {isSettingsOpen && (

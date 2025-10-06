@@ -9,7 +9,6 @@ export interface TimeRemainingCardProps {
   onTitleChange?: (newTitle: string) => void;
   className?: string;
   width?: string;
-  height?: string;
   showIcon?: boolean;
   showTitle?: boolean;
   showSubtitle?: boolean;
@@ -21,14 +20,12 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
   onTitleChange,
   className = "",
   width = "w-full",
-  height = "h-20",
   showIcon = true,
   showTitle = true,
   showSubtitle = true,
 }) => {
   const { entities } = useHomeAssistantStore();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [progressHistory, setProgressHistory] = useState<number[]>([]);
 
   // Update time every second for countdown
   useEffect(() => {
@@ -213,78 +210,106 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
 
   const progressPercentage = getProgressPercentage();
 
-  // Update progress history
-  useEffect(() => {
-    if (progressPercentage !== undefined) {
-      setProgressHistory((prev) => {
-        const newHistory = [...prev, progressPercentage];
-        // Keep only last 60 data points (1 minute of history)
-        return newHistory.slice(-60);
-      });
-    }
-  }, [progressPercentage]);
-
-  // Initialize with some sample data for immediate visibility
-  useEffect(() => {
-    if (progressHistory.length === 0) {
-      // Create initial sample data for debugging - starts at 100% and goes down to 5%
-      const sampleData = Array.from({ length: 30 }, (_, i) => {
-        const progress = 100 - (i / 29) * 95; // From 100% down to 5%
-        const variation = Math.sin(i * 0.2) * 3; // Small variation
-        return Math.max(5, Math.min(100, progress + variation));
-      });
-      setProgressHistory(sampleData);
-    }
-  }, [progressPercentage, progressHistory.length]);
-
-  // Generate SVG path for the progress graph
-  const generateGraphPath = () => {
-    if (progressHistory.length < 2) return "";
-
-    const width = 1500; // Graph width
-    const height = 600; // Graph height
-    const padding = 0; // No padding for full width
-
-    const points = progressHistory.map((progress, index) => {
-      const x = (index / (progressHistory.length - 1)) * width;
-      const y = padding + (progress / 100) * (height - padding * 2);
-      return `${x},${y}`;
-    });
-
-    return `M ${points.join(" L ")}`;
-  };
-
   return (
     <Card
       title={showTitle ? title : ""}
       subtitle={showSubtitle ? remaining?.text || "N/A" : ""}
       icon={showIcon ? <Timer className="w-5 h-5" /> : undefined}
       onTitleChange={onTitleChange}
-      className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 ${className}`}
+      className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl border border-gray-700/50 shadow-xl ${className}`}
       width={width}
-      height={height}
+      height="h-16"
     >
-      {/* Background progress graph - simple line graph */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <svg width="100%" height="100%" viewBox="0 0 200 60" className="w-full h-full">
-          {progressHistory.length >= 2 && (
-            <>
-              <path d={generateGraphPath()} stroke="#f97316" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              {/* Fill area under the curve */}
-              <path d={`${generateGraphPath()} L 200,60 L 0,60 Z`} fill="#f97316" fillOpacity="0.25" />
-            </>
-          )}
-        </svg>
+      {/* Enhanced circular progress with better styling */}
+      <div className="absolute top-1 right-1 bottom-1 w-14">
+        <div className="relative w-full h-full flex items-center justify-center">
+          <div className="relative w-12 h-12">
+            <svg className="w-12 h-12 transform -rotate-90 drop-shadow-lg" viewBox="0 0 36 36">
+              {/* Background circle with glow effect */}
+              <path
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                stroke={progressPercentage === 0 ? "rgba(75, 85, 99, 0.2)" : "rgba(75, 85, 99, 0.4)"}
+                strokeWidth="3"
+                className="drop-shadow-sm"
+              />
+              {/* Progress circle with enhanced styling */}
+              {progressPercentage > 0 ? (
+                <path
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke={
+                    progressPercentage >= 100 
+                      ? "#10b981" // green-500
+                      : progressPercentage >= 75 
+                      ? "#eab308" // yellow-500
+                      : progressPercentage >= 50 
+                      ? "#f97316" // orange-500
+                      : "#ef4444" // red-500
+                  }
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={`${progressPercentage}, 100`}
+                  className="transition-all duration-1000 drop-shadow-md"
+                  style={{
+                    filter: `drop-shadow(0 0 4px ${
+                      progressPercentage >= 100 
+                        ? "rgba(16, 185, 129, 0.4)"
+                        : progressPercentage >= 75 
+                        ? "rgba(234, 179, 8, 0.4)"
+                        : progressPercentage >= 50 
+                        ? "rgba(249, 115, 22, 0.4)"
+                        : "rgba(239, 68, 68, 0.4)"
+                    })`
+                  }}
+                />
+              ) : (
+                /* Special 0% state - show a dashed circle */
+                <path
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="rgba(156, 163, 175, 0.6)"
+                  strokeWidth="2"
+                  strokeDasharray="4,4"
+                  className="transition-all duration-1000"
+                />
+              )}
+            </svg>
+            {/* Enhanced center percentage text */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs font-bold text-white drop-shadow-md">
+                {Math.round(progressPercentage)}%
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Progress bar in subtitle area */}
-      <div className="absolute bottom-2 left-2 right-2 h-2 bg-gray-700 rounded overflow-hidden">
-        <div
-          className={`h-full transition-all duration-1000 ${
-            progressPercentage >= 100 ? "bg-green-500" : progressPercentage >= 75 ? "bg-yellow-500" : progressPercentage >= 50 ? "bg-orange-500" : "bg-red-500"
-          }`}
-          style={{ width: `${progressPercentage}%` }}
-        />
+      {/* Subtle progress indicator line at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-700/30">
+        {progressPercentage > 0 ? (
+          <div 
+            className={`h-full transition-all duration-1000 ${
+              progressPercentage >= 100 
+                ? "bg-gradient-to-r from-green-500 to-green-400"
+                : progressPercentage >= 75 
+                ? "bg-gradient-to-r from-yellow-500 to-yellow-400"
+                : progressPercentage >= 50 
+                ? "bg-gradient-to-r from-orange-500 to-orange-400"
+                : "bg-gradient-to-r from-red-500 to-red-400"
+            }`}
+            style={{ width: `${progressPercentage}%` }}
+          />
+        ) : (
+          /* 0% state - show a subtle pulsing indicator */
+          <div className="h-full bg-gradient-to-r from-gray-500/40 to-gray-400/40 animate-pulse" />
+        )}
       </div>
     </Card>
   );
