@@ -45,36 +45,66 @@
                   "entityId": "sensor.eve_room_a52b_air_quality"
                 }
               ],
-              "position": { "x": 0, "y": 0 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 0
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             },
             {
               "id": "lb0801-e-light",
               "type": "light-switch",
               "title": "Deckenlicht",
               "entityId": "light.lb0801_e_light",
-              "position": { "x": 0, "y": 1 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 1
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             },
             {
               "id": "zigbee-controller-light",
               "type": "light-switch",
               "title": "Indirektes Licht",
               "entityId": "light.zigbee_controller_light",
-              "position": { "x": 1, "y": 1 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 1,
+                "y": 1
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             },
             {
               "id": "living-room-shutters",
               "type": "shutter",
               "title": "Rollo",
               "entityId": "cover.rollo_cover",
-              "position": { "x": 0, "y": 2 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 2
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             }
           ],
-          "position": { "x": 0, "y": 0 },
-          "size": { "width": 1, "height": 3 }
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "size": {
+            "width": 1,
+            "height": 3
+          }
         },
         {
           "id": "kueche-section",
@@ -93,36 +123,66 @@
                   "entityId": "sensor.presence_sensor_fp2_a596_light_sensor_light_level"
                 }
               ],
-              "position": { "x": 0, "y": 3 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 3
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             },
             {
               "id": "kuche-licht",
               "type": "light-switch",
               "title": "Küche Lichter",
               "entityId": "light.kuche_licht",
-              "position": { "x": 0, "y": 4 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 4
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             },
             {
               "id": "timer-card",
               "type": "time-remaining",
               "title": "Spühlmaschiene",
               "entityId": "timer.geschirrspuler_remaining_program_time",
-              "position": { "x": 1, "y": 4 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 1,
+                "y": 4
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             },
             {
               "id": "kuche-idle",
               "type": "sensor-state",
               "title": "Küche Leerlauf",
               "entityId": "binary_sensor.kuche_idle",
-              "position": { "x": 0, "y": 5 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 5
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             }
           ],
-          "position": { "x": 0, "y": 3 },
-          "size": { "width": 1, "height": 2 }
+          "position": {
+            "x": 0,
+            "y": 3
+          },
+          "size": {
+            "width": 1,
+            "height": 2
+          }
         },
         {
           "id": "badezimmer-section",
@@ -147,28 +207,52 @@
                   "entityId": "sensor.kuche_temperatur_temperature"
                 }
               ],
-              "position": { "x": 0, "y": 6 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 6
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             },
             {
               "id": "waschmaschiene",
               "type": "sensor-state",
               "title": "Waschmaschiene",
               "entityId": "binary_sensor.waschmaschiene",
-              "position": { "x": 0, "y": 7 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 7
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             },
             {
               "id": "timer-card2",
               "type": "time-remaining",
               "title": "Trockner",
               "entityId": "timer.153931628965879_time_remaining",
-              "position": { "x": 1, "y": 7 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 1,
+                "y": 7
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             }
           ],
-          "position": { "x": 0, "y": 5 },
-          "size": { "width": 1, "height": 1 }
+          "position": {
+            "x": 0,
+            "y": 5
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
         },
         {
           "id": "3d-drucker-section",
@@ -180,20 +264,38 @@
               "title": "3D Drucker",
               "icon": "printer",
               "badges": [],
-              "position": { "x": 0, "y": 8 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 8
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             },
             {
               "id": "print-status",
               "type": "sensor-state",
               "title": "Print Status",
               "entityId": "sensor.print_status",
-              "position": { "x": 0, "y": 9 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 9
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             }
           ],
-          "position": { "x": 0, "y": 6 },
-          "size": { "width": 1, "height": 1 }
+          "position": {
+            "x": 0,
+            "y": 6
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
         },
         {
           "id": "wohnzimmer-section",
@@ -205,27 +307,45 @@
               "title": "Wohnzimmer",
               "icon": "sofa",
               "badges": [],
-              "position": { "x": 0, "y": 10 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 10
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             },
             {
               "id": "wohnzimmer-light",
               "type": "light-switch",
               "title": "Wohnzimmer",
               "entityId": "light.wohnzimmer_light",
-              "position": { "x": 0, "y": 11 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 0,
+                "y": 11
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             },
             {
               "id": "helios-ventilation",
               "type": "helios-ventilation",
               "title": "Belüftungsanlage",
               "entityId": "climate.helios_ventilation",
-              "position": { "x": 0, "y": 12 },
-              "size": { "width": 2, "height": 2 },
+              "position": {
+                "x": 0,
+                "y": 12
+              },
+              "size": {
+                "width": 2,
+                "height": 2
+              },
               "heliosSettings": {
                 "indoorAirEntity": "sensor.kwl_220_d_l_indoor_temperature",
-                "supplyAirEntity": "sensor.kwl_220_d_l_supply_temperature", 
+                "supplyAirEntity": "sensor.kwl_220_d_l_supply_temperature",
                 "outdoorAirEntity": "sensor.kwl_220_d_l_outside_temperature",
                 "exhaustAirEntity": "sensor.kwl_220_d_l_exhaust_temperature",
                 "fanSpeedEntity": "sensor.kwl_220_d_l_current_fan_speed",
@@ -237,8 +357,14 @@
               "type": "button",
               "title": "Timon PC",
               "entityId": "button.timonpc_timonpc_hibernate",
-              "position": { "x": 0, "y": 16 },
-              "size": { "width": 1, "height": 1 },
+              "position": {
+                "x": 0,
+                "y": 16
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              },
               "vibrationDuration": 3,
               "iconName": "pc"
             },
@@ -247,14 +373,26 @@
               "type": "button",
               "title": "Anna PC",
               "entityId": "button.annapc_annapc_hibernate",
-              "position": { "x": 1, "y": 16  },
-              "size": { "width": 1, "height": 1 },
+              "position": {
+                "x": 1,
+                "y": 16
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              },
               "vibrationDuration": 3,
               "iconName": "pc"
             }
           ],
-          "position": { "x": 0, "y": 7 },
-          "size": { "width": 1, "height": 4 }
+          "position": {
+            "x": 0,
+            "y": 7
+          },
+          "size": {
+            "width": 1,
+            "height": 4
+          }
         }
       ]
     },
@@ -268,7 +406,6 @@
         "xl": 2
       },
       "cards": [
-        
         {
           "id": "general-section",
           "type": "room-section",
@@ -279,56 +416,98 @@
               "title": "General",
               "icon": "info",
               "badges": [],
-              "position": { "x": 2, "y": 0 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 2,
+                "y": 0
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             },
             {
               "id": "timon-location",
               "type": "person",
               "title": "Timon",
               "entityId": "person.timon",
-              "position": { "x": 2, "y": 1 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 2,
+                "y": 1
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             },
             {
               "id": "anna-location",
               "type": "person",
               "title": "Anna",
               "entityId": "person.anna",
-              "position": { "x": 3, "y": 1 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 3,
+                "y": 1
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             },
             {
               "id": "front-door",
               "type": "sensor-state",
               "title": "Haustür",
               "entityId": "binary_sensor.eve_door_20ebn9901_door_2",
-              "position": { "x": 2, "y": 2 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 2,
+                "y": 2
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             },
             {
               "id": "back-door",
               "type": "sensor-state",
               "title": "Tür Balkon",
               "entityId": "binary_sensor.balkon_tur_door",
-              "position": { "x": 3, "y": 2 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 3,
+                "y": 2
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             },
             {
               "id": "living-room-window",
               "type": "sensor-state",
               "title": "Tür Schlafzimmer",
               "entityId": "binary_sensor.eve_door_20ebn9901_door",
-              "position": { "x": 2, "y": 3 },
-              "size": { "width": 1, "height": 1 }
+              "position": {
+                "x": 2,
+                "y": 3
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             },
             {
               "id": "doorman-open-entrance-door",
               "type": "button",
               "title": "Gebäudetür",
               "entityId": "button.doorman_s3_open_entrance_door",
-              "position": { "x": 3, "y": 3 },
-              "size": { "width": 1, "height": 1 },
+              "position": {
+                "x": 3,
+                "y": 3
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              },
               "vibrationDuration": 3,
               "iconName": "door"
             },
@@ -337,41 +516,128 @@
               "type": "binary-switch",
               "title": "Gebäudetür Automatik",
               "entityId": "switch.doorman_s3_ring_to_open",
-              "position": { "x": 2, "y": 4 },
-              "size": { "width": 2, "height": 1 }
+              "position": {
+                "x": 2,
+                "y": 4
+              },
+              "size": {
+                "width": 2,
+                "height": 1
+              }
             }
           ],
-          "position": { "x": 0, "y": 0 },
-          "size": { "width": 1, "height": 4 }
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "size": {
+            "width": 1,
+            "height": 4
+          }
         },
         {
           "id": "weather-forecast",
-          "type": "weather-forecast",
+          "type": "weather",
           "title": "Wetter",
           "entityId": "weather.home",
-          "position": { "x": 2, "y": 5 },
-          "size": { "width": 2, "height": 1 }
+          "zipCode": "21033",
+          "position": {
+            "x": 2,
+            "y": 16
+          },
+          "size": {
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "id": "home-assistant-link",
+          "type": "link",
+          "title": "Home Assistant",
+          "url": "http://homeassistant.local:8123",
+          "subtitle": "Open Dashboard",
+          "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg",
+          "position": {
+            "x": 2,
+            "y": 19
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": "router-link",
+          "type": "link",
+          "title": "Router",
+          "url": "http://192.168.1.1",
+          "subtitle": "Admin Panel",
+          "icon": "router",
+          "position": {
+            "x": 3,
+            "y": 19
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": "mealie-link",
+          "type": "link",
+          "title": "Mealie",
+          "url": "http://192.168.1.2:9925",
+          "subtitle": "Recipe Manager",
+          "icon": "mealie",
+          "position": {
+            "x": 2,
+            "y": 21
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
         },
         {
           "id": "bus-departures",
           "type": "bus-departure",
           "title": "Moosberg Bus Abfahrten",
           "entityId": "sensor.moosberg_pflegezentrum_abfahrten",
-          "position": { "x": 2, "y": 6 },
-          "size": { "width": 2, "height": 4 }
+          "position": {
+            "x": 2,
+            "y": 6
+          },
+          "size": {
+            "width": 2,
+            "height": 4
+          }
         },
         {
           "id": "abfall",
           "type": "trash",
           "title": "Abfall",
           "entities": [
-            { "entity": "sensor.abfuhr_gelbe_wertstofftonne_sack" },
-            { "entity": "sensor.abfuhr_schwarze_restmulltonne" },
-            { "entity": "sensor.abfuhr_grune_biotonne" },
-            { "entity": "sensor.abfuhr_blaue_papiertonne" }
+            {
+              "entity": "sensor.abfuhr_gelbe_wertstofftonne_sack"
+            },
+            {
+              "entity": "sensor.abfuhr_schwarze_restmulltonne"
+            },
+            {
+              "entity": "sensor.abfuhr_grune_biotonne"
+            },
+            {
+              "entity": "sensor.abfuhr_blaue_papiertonne"
+            }
           ],
-          "position": { "x": 2, "y":10 },
-          "size": { "width": 2, "height": 2 },
+          "position": {
+            "x": 2,
+            "y": 10
+          },
+          "size": {
+            "width": 2,
+            "height": 2
+          },
           "vibrationDuration": 3,
           "iconName": "trash",
           "showIcon": false,
@@ -383,8 +649,14 @@
           "type": "calendar",
           "title": "Kalender",
           "entityId": "calendar.anna_timon",
-          "position": { "x": 2, "y": 12 },
-          "size": { "width": 2, "height": 4 }
+          "position": {
+            "x": 2,
+            "y": 12
+          },
+          "size": {
+            "width": 2,
+            "height": 4
+          }
         }
       ]
     }

@@ -13,6 +13,8 @@ interface ShutterCardProps {
   onDown?: () => void;
   onSetPosition?: (position: number) => void;
   onTitleChange?: (title: string, entityId?: string) => void;
+  onJsonSave?: (config: any) => void;
+  cardConfig?: any;
   entityId?: string;
   disabled?: boolean;
   className?: string;
@@ -26,6 +28,8 @@ export const ShutterCard: React.FC<ShutterCardProps> = ({
   onDown,
   onSetPosition,
   onTitleChange,
+  onJsonSave,
+  cardConfig,
   entityId,
   disabled = false,
   className = "",
@@ -117,9 +121,11 @@ export const ShutterCard: React.FC<ShutterCardProps> = ({
   return (
     <Card
       title={title}
-      subtitle={isMoving ? `Moving... ${realTimePosition}% Open` : `${realTimePosition}% Open`}
+      subtitle={isMoving ? `Moving... ${getSubtitle()}` : getSubtitle()}
       icon={getShutterIcon()}
       onTitleChange={onTitleChange}
+      onJsonSave={onJsonSave}
+      cardConfig={cardConfig}
       entityId={entityId}
       disabled={disabled}
       className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 ${className}`}

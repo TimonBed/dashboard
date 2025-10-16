@@ -16,17 +16,26 @@ export interface RoomHeaderCardProps {
   height?: string;
 }
 
-export const RoomHeaderCard: React.FC<RoomHeaderCardProps> = ({
-  title,
-  icon,
-  badges = [],
-  className = "",
-  width = "w-full",
-  height = "h-16",
-}) => {
+export const RoomHeaderCard: React.FC<RoomHeaderCardProps> = ({ title, icon, badges = [], className = "", width = "w-full", height = "h-16" }) => {
   const { entities } = useHomeAssistantStore();
 
   const getIcon = (iconName: string) => {
+    // Check if iconName is a URL
+    const isUrl =
+      iconName &&
+      (iconName.startsWith("http://") ||
+        iconName.startsWith("https://") ||
+        iconName.endsWith(".jpg") ||
+        iconName.endsWith(".jpeg") ||
+        iconName.endsWith(".png") ||
+        iconName.endsWith(".svg") ||
+        iconName.endsWith(".webp") ||
+        iconName.endsWith(".gif"));
+
+    if (isUrl) {
+      return <img src={iconName} alt="Icon" className="w-4 h-4 object-contain" />;
+    }
+
     const iconMap: { [key: string]: React.ReactNode } = {
       droplets: <Droplets className="w-4 h-4" />,
       thermometer: <Thermometer className="w-4 h-4" />,
@@ -75,11 +84,7 @@ export const RoomHeaderCard: React.FC<RoomHeaderCardProps> = ({
           {icon && getIcon(icon)}
           <h2 className="text-xl font-semibold text-white">{title}</h2>
         </div>
-        {badges.length > 0 && (
-          <div className="flex items-center space-x-4">
-            {badges.map(formatSensorValue)}
-          </div>
-        )}
+        {badges.length > 0 && <div className="flex items-center space-x-4">{badges.map(formatSensorValue)}</div>}
       </div>
     </div>
   );

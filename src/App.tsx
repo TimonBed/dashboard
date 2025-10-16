@@ -12,6 +12,7 @@ import { TabletDashboard } from "./components/TabletDashboard";
 import { DynamicDashboard } from "./components/DynamicDashboard";
 import { DashboardManager } from "./components/DashboardManager";
 import { SettingsPage } from "./components/SettingsPage";
+import { Notification } from "./components/Notification";
 import { useHomeAssistant } from "./hooks/useHomeAssistant";
 import { dashboardService } from "./services/dashboardService";
 import { Dashboard } from "./types/dashboard";
@@ -65,14 +66,18 @@ function App() {
   const location = useLocation();
   const activeTab = location.pathname;
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
+  const [notification, setNotification] = useState<string | null>(null);
 
   // Check URL parameters for sidebar visibility
   const urlParams = new URLSearchParams(location.search);
   const hideSidebar = urlParams.get("sidebar") === "false" || urlParams.get("hidesidebar") === "true";
 
   useEffect(() => {
-    const loadedDashboards = dashboardService.getAllDashboards();
-    setDashboards(loadedDashboards);
+    const loadDashboards = async () => {
+      const loadedDashboards = await dashboardService.getAllDashboards();
+      setDashboards(loadedDashboards);
+    };
+    loadDashboards();
   }, []);
 
   const handleCardTitleChange = (cardId: string, title: string, entityId?: string) => {
@@ -80,14 +85,31 @@ function App() {
     console.log(`Card ${cardId} title changed to: ${title}, entityId: ${entityId}`);
   };
 
-  const handleDashboardChange = () => {
+  const handleCardJsonSave = (dashboardId: string) => async (cardId: string, config: any) => {
+    // Handle JSON configuration changes - update dashboard and save to file
+    const success = await dashboardService.updateCardConfig(dashboardId, cardId, config);
+    if (success) {
+      // Reload dashboards to reflect changes (already done in updateCardConfig)
+      const loadedDashboards = await dashboardService.getAllDashboards();
+      setDashboards(loadedDashboards);
+
+      // Show success notification
+      setNotification(`Dashboard saved! Changes persisted to file.`);
+    }
+  };
+
+  const handleDashboardChange = async () => {
     // Reload dashboards when they change
-    const loadedDashboards = dashboardService.getAllDashboards();
+    const loadedDashboards = await dashboardService.getAllDashboards();
     setDashboards(loadedDashboards);
   };
 
   const renderDashboardRoute = (dashboard: Dashboard) => (
-    <Route key={dashboard.id} path={dashboard.path} element={<DynamicDashboard dashboard={dashboard} onCardTitleChange={handleCardTitleChange} />} />
+    <Route
+      key={dashboard.id}
+      path={dashboard.path}
+      element={<DynamicDashboard dashboard={dashboard} onCardTitleChange={handleCardTitleChange} onCardJsonSave={handleCardJsonSave(dashboard.id)} />}
+    />
   );
 
   return (
@@ -105,6 +127,9 @@ function App() {
           {dashboards.map(renderDashboardRoute)}
         </Routes>
       </div>
+
+      {/* Success Notification */}
+      {notification && <Notification message={notification} onClose={() => setNotification(null)} />}
     </div>
   );
 }

@@ -15,12 +15,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
 
   useEffect(() => {
-    const loadedDashboards = dashboardService.getAllDashboards();
-    setDashboards(loadedDashboards);
+    const loadDashboards = async () => {
+      const loadedDashboards = await dashboardService.getAllDashboards();
+      setDashboards(loadedDashboards);
+    };
+    loadDashboards();
   }, []);
 
   // Icon mapping for dashboard types
   const getDashboardIcon = (iconName?: string) => {
+    // Check if iconName is a URL
+    const isUrl =
+      iconName &&
+      (iconName.startsWith("http://") ||
+        iconName.startsWith("https://") ||
+        iconName.endsWith(".jpg") ||
+        iconName.endsWith(".jpeg") ||
+        iconName.endsWith(".png") ||
+        iconName.endsWith(".svg") ||
+        iconName.endsWith(".webp") ||
+        iconName.endsWith(".gif"));
+
+    if (isUrl) {
+      // Return a component that renders an image
+      return ({ className }: { className?: string }) => <img src={iconName} alt="Dashboard icon" className={className || "w-5 h-5 object-contain"} />;
+    }
+
     switch (iconName) {
       case "Home":
         return Home;

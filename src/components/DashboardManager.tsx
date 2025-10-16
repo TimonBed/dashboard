@@ -17,8 +17,8 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({ onDashboardC
     loadDashboards();
   }, []);
 
-  const loadDashboards = () => {
-    const loadedDashboards = dashboardService.getAllDashboards();
+  const loadDashboards = async () => {
+    const loadedDashboards = await dashboardService.getAllDashboards();
     setDashboards(loadedDashboards);
   };
 
