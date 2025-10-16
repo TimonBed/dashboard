@@ -43,6 +43,22 @@ export const ButtonCard: React.FC<ButtonCardProps> = ({
   const getIcon = () => {
     if (icon) return icon;
 
+    // Check if iconName is a URL
+    const isUrl =
+      iconName &&
+      (iconName.startsWith("http://") ||
+        iconName.startsWith("https://") ||
+        iconName.endsWith(".jpg") ||
+        iconName.endsWith(".jpeg") ||
+        iconName.endsWith(".png") ||
+        iconName.endsWith(".svg") ||
+        iconName.endsWith(".webp") ||
+        iconName.endsWith(".gif"));
+
+    if (isUrl) {
+      return <img src={iconName} alt="Button icon" className="w-5 h-5 object-contain" />;
+    }
+
     // Icon mapping for JSON override
     const iconMap: { [key: string]: React.ReactNode } = {
       power: <Power className="w-5 h-5" />,
@@ -177,11 +193,6 @@ export const ButtonCard: React.FC<ButtonCardProps> = ({
           />
         </div>
       )}
-
-
-
-
-      
 
       {/* CSS Animation Keyframes */}
       <style

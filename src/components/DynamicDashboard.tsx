@@ -13,13 +13,16 @@ import { HeliosVentilationCard } from "./cards/HeliosVentilationCard";
 import { BusDepartureCard } from "./cards/BusDepartureCard";
 import { RoomHeaderCard } from "./cards/RoomHeaderCard";
 import { CalendarCard } from "./cards/CalendarCard";
+import { WeatherCard } from "./cards/WeatherCard";
+import { LinkCard } from "./cards/LinkCard";
 
 interface DynamicDashboardProps {
   dashboard: Dashboard;
   onCardTitleChange?: (cardId: string, title: string, entityId?: string) => void;
+  onCardJsonSave?: (cardId: string, config: any) => void;
 }
 
-export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, onCardTitleChange }) => {
+export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, onCardTitleChange, onCardJsonSave }) => {
   // Flatten all cards from all sections and calculate grid dimensions
   const getAllCards = () => {
     const allCards: any[] = [];
@@ -51,9 +54,10 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
     const commonProps = {
       title: card.title,
       entityId: card.entityId,
+      cardConfig: card,
       onTitleChange: onCardTitleChange ? (title: string, entityId?: string) => onCardTitleChange(card.id, title, entityId) : undefined,
+      onJsonSave: onCardJsonSave ? (config: any) => onCardJsonSave(card.id, config) : undefined,
     };
-
 
     const cardComponents: { [key: string]: React.ComponentType<any> } = {
       "light-switch": LightSwitchCard,
@@ -69,6 +73,8 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       "bus-departure": BusDepartureCard,
       "room-header": RoomHeaderCard,
       calendar: CalendarCard,
+      weather: WeatherCard,
+      link: LinkCard,
     };
 
     const CardComponent = cardComponents[card.type];
@@ -87,11 +93,13 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       ...(card.type === "uptime" && { uptimeSettings: card.uptimeSettings }),
       ...(card.type === "helios-ventilation" && { heliosSettings: card.heliosSettings }),
       ...(card.type === "button" && { vibrationDuration: card.vibrationDuration, iconName: card.iconName }),
-      ...(card.type === "room-header" && { 
-        icon: card.icon, 
+      ...(card.type === "room-header" && {
+        icon: card.icon,
         badges: card.badges,
-        height: card.size?.height === 2 ? "h-32" : "h-16"
+        height: card.size?.height === 2 ? "h-32" : "h-16",
       }),
+      ...(card.type === "weather" && { zipCode: card.zipCode }),
+      ...(card.type === "link" && { url: card.url, subtitle: card.subtitle, icon: card.icon }),
     };
 
     return (
@@ -107,7 +115,6 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       </div>
     );
   };
-
 
   return (
     <div
@@ -128,11 +135,11 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       <div
         className="dashboard-grid"
         style={{
-          display: 'grid',
+          display: "grid",
           gridTemplateColumns: `repeat(${maxX}, 1fr)`,
           gridTemplateRows: `repeat(${maxY}, 64px)`,
-          gap: '8px',
-          height: '100%',
+          gap: "8px",
+          height: "100%",
         }}
       >
         {allCards.map((card) => renderCard(card))}

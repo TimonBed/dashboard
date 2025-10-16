@@ -8,6 +8,8 @@ interface CardProps {
   children?: React.ReactNode;
   onClick?: () => void;
   onTitleChange?: (title: string, entityId?: string) => void;
+  onJsonSave?: (config: any) => void;
+  cardConfig?: any;
   entityId?: string;
   disabled?: boolean;
   className?: string;
@@ -17,7 +19,24 @@ interface CardProps {
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ title, subtitle, icon, children, onClick, onTitleChange, entityId, disabled = false, width = "w-80", height = "h-16", onMouseDown }, ref) => {
+  (
+    {
+      title,
+      subtitle,
+      icon,
+      children,
+      onClick,
+      onTitleChange,
+      onJsonSave,
+      cardConfig,
+      entityId,
+      disabled = false,
+      width = "w-80",
+      height = "h-16",
+      onMouseDown,
+    },
+    ref
+  ) => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [currentTitle, setCurrentTitle] = useState(title);
     const [currentEntityId, setCurrentEntityId] = useState(entityId);
@@ -77,7 +96,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             onClose={() => setIsSettingsOpen(false)}
             title={currentTitle}
             entityId={currentEntityId}
+            cardConfig={cardConfig}
             onSave={handleSaveSettings}
+            onSaveJson={onJsonSave}
           />
         )}
       </>
