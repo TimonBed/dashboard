@@ -41,6 +41,7 @@ export const CalendarCard: React.FC<CalendarCardProps> = ({
 }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -111,12 +112,23 @@ export const CalendarCard: React.FC<CalendarCardProps> = ({
     return () => clearInterval(interval);
   }, [entityId]);
 
+  // Update component every minute to refresh active event highlighting
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60 * 1000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
+
   const getUpcomingEvents = () => {
     const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     return events
       .filter((event) => {
         const eventDate = new Date(event.start.dateTime || event.start.date || "");
-        return eventDate >= now;
+        const eventDayStart = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+        return eventDayStart >= todayStart;
       })
       .sort((a, b) => {
         const dateA = new Date(a.start.dateTime || a.start.date || "");
@@ -177,6 +189,14 @@ export const CalendarCard: React.FC<CalendarCardProps> = ({
     return event.all_day ? "Ganztägig" : "";
   };
 
+  const isEventActive = (event: CalendarEvent) => {
+    const now = new Date();
+    const startDate = new Date(event.start.dateTime || event.start.date || "");
+    const endDate = new Date(event.end.dateTime || event.end.date || "");
+
+    return now >= startDate && now <= endDate;
+  };
+
   const groupedEvents = groupEventsByDate();
 
   if (loading) {
@@ -232,44 +252,56 @@ export const CalendarCard: React.FC<CalendarCardProps> = ({
 
                   {/* Compact Events for this date */}
                   <div className="flex-1 space-y-1">
-                    {dayEvents.map((event, eventIndex) => (
-                      <div key={event.uid || eventIndex} className={`${getEventColor(eventIndex)} rounded-lg p-2 shadow-sm border border-white/10`}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h4
-                              className={`font-medium text-xs truncate ${
-                                eventIndex === 0 || eventIndex === 2 || eventIndex === 4 ? "text-white" : "text-gray-800"
-                              }`}
-                            >
-                              {event.summary}
-                            </h4>
-                            {event.location && (
-                              <div className="flex items-center mt-0.5">
-                                <div
-                                  className={`w-1 h-1 rounded-full mr-1 ${
-                                    eventIndex === 0 || eventIndex === 2 || eventIndex === 4 ? "bg-white/60" : "bg-gray-600"
-                                  }`}
-                                />
-                                <p
-                                  className={`text-xs truncate ${eventIndex === 0 || eventIndex === 2 || eventIndex === 4 ? "text-white/80" : "text-gray-600"}`}
-                                >
-                                  {event.location}
-                                </p>
+                    {dayEvents.map((event, eventIndex) => {
+                      const isActive = isEventActive(event);
+                      return (
+                        <div
+                          key={event.uid || eventIndex}
+                          className={`${isActive ? "bg-gradient-to-r from-blue-600/70 to-blue-700/70" : getEventColor(eventIndex)} rounded-lg p-2 shadow-sm`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h4
+                                className={`font-medium text-xs truncate ${
+                                  isActive || eventIndex === 0 || eventIndex === 2 || eventIndex === 4 ? "text-white" : "text-gray-800"
+                                }`}
+                              >
+                                {event.summary}
+                              </h4>
+                              {event.location && (
+                                <div className="flex items-center mt-0.5">
+                                  <div
+                                    className={`w-1 h-1 rounded-full mr-1 ${
+                                      isActive || eventIndex === 0 || eventIndex === 2 || eventIndex === 4 ? "bg-white/60" : "bg-gray-600"
+                                    }`}
+                                  />
+                                  <p
+                                    className={`text-xs truncate ${
+                                      isActive || eventIndex === 0 || eventIndex === 2 || eventIndex === 4 ? "text-white/80" : "text-gray-600"
+                                    }`}
+                                  >
+                                    {event.location}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            {formatEventTime(event) && (
+                              <div
+                                className={`text-xs font-medium ml-1 px-1.5 py-0.5 rounded ${
+                                  isActive
+                                    ? "text-white bg-white/30"
+                                    : eventIndex === 0 || eventIndex === 2 || eventIndex === 4
+                                    ? "text-white bg-white/20"
+                                    : "text-gray-800 bg-gray-200"
+                                }`}
+                              >
+                                {formatEventTime(event)}
                               </div>
                             )}
                           </div>
-                          {formatEventTime(event) && (
-                            <div
-                              className={`text-xs font-medium ml-1 px-1.5 py-0.5 rounded ${
-                                eventIndex === 0 || eventIndex === 2 || eventIndex === 4 ? "text-white bg-white/20" : "text-gray-800 bg-gray-200"
-                              }`}
-                            >
-                              {formatEventTime(event)}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );

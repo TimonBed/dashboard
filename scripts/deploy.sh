@@ -148,3 +148,4 @@ print_status "Useful commands:"
 print_status "  View logs: docker logs -f $CONTAINER_NAME"
 print_status "  Stop: docker stop $CONTAINER_NAME"
 print_status "  Restart: docker restart $CONTAINER_NAME"
+

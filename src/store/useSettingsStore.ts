@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 export interface SettingsState {
   homeAssistantIP: string;
   homeAssistantToken: string;
+  openWeatherApiKey: string;
   autoConnect: boolean;
 }
 
@@ -16,6 +17,7 @@ interface SettingsActions {
 const defaultSettings: SettingsState = {
   homeAssistantIP: "",
   homeAssistantToken: "",
+  openWeatherApiKey: "",
   autoConnect: true,
 };
 
@@ -38,17 +40,17 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
       getHomeAssistantURL: () => {
         const { homeAssistantIP } = get();
         if (!homeAssistantIP) return "";
-        
+
         // If it's already a full URL, return as is
-        if (homeAssistantIP.startsWith('http')) {
+        if (homeAssistantIP.startsWith("http")) {
           return homeAssistantIP;
         }
-        
+
         // Check if port is already included
-        const hasPort = homeAssistantIP.includes(':');
-        const isDomain = homeAssistantIP.includes('.') || homeAssistantIP === 'localhost';
+        const hasPort = homeAssistantIP.includes(":");
+        const isDomain = homeAssistantIP.includes(".") || homeAssistantIP === "localhost";
         const protocol = homeAssistantIP === "localhost" ? "http" : "https";
-        
+
         if (hasPort) {
           // Port is already included, just add protocol
           return `${protocol}://${homeAssistantIP}`;

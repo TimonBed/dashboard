@@ -199,6 +199,34 @@
             "width": 2,
             "height": 4
           }
+        },
+        {
+          "id": "section-1760708574649",
+          "type": "room-section",
+          "cards": [
+            {
+              "id": "card-1760708574649",
+              "type": "weather",
+              "title": "Wetter",
+              "position": {
+                "x": 3,
+                "y": 3
+              },
+              "size": {
+                "width": 2,
+                "height": 2
+              },
+              "zipCode": "21033"
+            }
+          ],
+          "position": {
+            "x": 0,
+            "y": 10
+          },
+          "size": {
+            "width": 8,
+            "height": 2
+          }
         }
       ]
     }
