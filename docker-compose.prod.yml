@@ -3,9 +3,10 @@
 
 services:
   ha-dashboard:
-    # IMPORTANT: Replace 'yourusername/ha_dashboard' with your actual GitHub repo (lowercase)
+    # IMPORTANT: Replace with your actual GitHub repo (MUST BE LOWERCASE!)
     # Format: ghcr.io/username/repository:latest
-    image: ghcr.io/yourusername/ha_dashboard:latest
+    # Example: ghcr.io/timonbed/dashboard:latest (NOT TimonBed/Dashboard)
+    image: ghcr.io/timonbed/ha_dashboard:latest
     container_name: ha-dashboard
     ports:
       # Change host port (3002) to your preferred port
