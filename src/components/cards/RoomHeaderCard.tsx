@@ -2,8 +2,9 @@ import React from "react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { Droplets, Thermometer, Lightbulb, FileText, Wind, Bed, ChefHat, Bath, Printer, Sofa, Info, Sun } from "lucide-react";
+import { CardComponentProps } from "../../types/cardProps";
 
-export interface RoomHeaderCardProps {
+interface RoomHeaderCardSpecificProps {
   title: string;
   icon?: string;
   badges?: Array<{
@@ -11,12 +12,25 @@ export interface RoomHeaderCardProps {
     entityId: string;
     icon: string;
   }>;
-  className?: string;
   width?: string;
   height?: string;
 }
 
-export const RoomHeaderCard: React.FC<RoomHeaderCardProps> = ({ title, icon, badges = [], className = "", width = "w-full", height = "h-16" }) => {
+export type RoomHeaderCardProps = CardComponentProps<RoomHeaderCardSpecificProps>;
+
+export const RoomHeaderCard: React.FC<RoomHeaderCardProps> = ({
+  title,
+  icon,
+  badges = [],
+  onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
+  entityId,
+  className = "",
+  width = "w-full",
+  height = "h-16",
+}) => {
   const { entities } = useHomeAssistantStore();
 
   const getIcon = (iconName: string) => {

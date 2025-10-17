@@ -4,21 +4,18 @@ import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { useHomeAssistant } from "../../hooks/useHomeAssistant";
 import { ShutterClosed, ShutterHalfOpen, ShutterOpen } from "../icons/ShutterIcons";
+import { CardComponentProps } from "../../types/cardProps";
 
-interface ShutterCardProps {
+interface ShutterCardSpecificProps {
   title: string;
-  position?: number; // 0-100, current position
+  position?: number;
   state?: "up" | "down";
   onUp?: () => void;
   onDown?: () => void;
   onSetPosition?: (position: number) => void;
-  onTitleChange?: (title: string, entityId?: string) => void;
-  onJsonSave?: (config: any) => void;
-  cardConfig?: any;
-  entityId?: string;
-  disabled?: boolean;
-  className?: string;
 }
+
+type ShutterCardProps = CardComponentProps<ShutterCardSpecificProps>;
 
 export const ShutterCard: React.FC<ShutterCardProps> = ({
   title,
@@ -29,6 +26,7 @@ export const ShutterCard: React.FC<ShutterCardProps> = ({
   onSetPosition,
   onTitleChange,
   onJsonSave,
+  onCardDelete,
   cardConfig,
   entityId,
   disabled = false,
@@ -125,6 +123,7 @@ export const ShutterCard: React.FC<ShutterCardProps> = ({
       icon={getShutterIcon()}
       onTitleChange={onTitleChange}
       onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
       cardConfig={cardConfig}
       entityId={entityId}
       disabled={disabled}

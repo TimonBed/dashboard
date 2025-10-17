@@ -4,12 +4,10 @@ import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { useHomeAssistant } from "../../hooks/useHomeAssistant";
 import Badge from "../ui/Badge";
+import { CardComponentProps } from "../../types/cardProps";
 
-export interface HeliosVentilationCardProps {
+interface HeliosVentilationCardSpecificProps {
   title: string;
-  entityId: string;
-  onTitleChange?: (newTitle: string) => void;
-  className?: string;
   width?: string;
   height?: string;
   heliosSettings?: {
@@ -22,10 +20,15 @@ export interface HeliosVentilationCardProps {
   };
 }
 
+export type HeliosVentilationCardProps = CardComponentProps<HeliosVentilationCardSpecificProps>;
+
 export const HeliosVentilationCard: React.FC<HeliosVentilationCardProps> = ({
   title,
   entityId,
   onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
   className = "",
   width = "w-full",
   height = "h-640",
@@ -33,7 +36,7 @@ export const HeliosVentilationCard: React.FC<HeliosVentilationCardProps> = ({
 }) => {
   const { entities } = useHomeAssistantStore();
   const { callService } = useHomeAssistant();
-  const haEntity = entities.get(entityId);
+  const haEntity = entityId ? entities.get(entityId) : undefined;
   const [selectedMode, setSelectedMode] = useState("");
 
   // Get ventilation data from Home Assistant using configured entities
@@ -185,6 +188,11 @@ export const HeliosVentilationCard: React.FC<HeliosVentilationCardProps> = ({
     <Card
       title={title}
       subtitle=""
+      onTitleChange={onTitleChange}
+      onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
+      cardConfig={cardConfig}
+      entityId={entityId}
       icon={
         <Fan
           className={`w-5 h-5 ${getCurrentModeIconColor()} ${fanSpeed > 0 ? "animate-spin" : ""}`}
@@ -195,7 +203,6 @@ export const HeliosVentilationCard: React.FC<HeliosVentilationCardProps> = ({
           }}
         />
       }
-      onTitleChange={onTitleChange}
       className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 ${className}`}
       width={width}
       height={height}

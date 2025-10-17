@@ -3,26 +3,28 @@ import { Lightbulb, LightbulbOff, Sun, Moon } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { useHomeAssistant } from "../../hooks/useHomeAssistant";
+import { CardComponentProps } from "../../types/cardProps";
 
-interface LightSwitchCardProps {
+interface LightSwitchCardSpecificProps {
   title: string;
   isOn?: boolean;
-  brightness?: number; // 0-100
-  color?: string; // hex color
+  brightness?: number;
+  color?: string;
   onClick?: () => void;
-  onTitleChange?: (title: string, entityId?: string) => void;
-  entityId?: string;
-  disabled?: boolean;
-  className?: string;
 }
+
+type LightSwitchCardProps = CardComponentProps<LightSwitchCardSpecificProps>;
 
 export const LightSwitchCard: React.FC<LightSwitchCardProps> = ({
   title,
   isOn = false,
   brightness = 255,
-  color = "#fbbf24", // amber default
+  color = "#fbbf24",
   onClick,
   onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
   entityId,
   disabled = false,
   className = "",
@@ -244,6 +246,9 @@ export const LightSwitchCard: React.FC<LightSwitchCardProps> = ({
       icon={getLightIcon()}
       onClick={disabled ? undefined : handleClick}
       onTitleChange={onTitleChange}
+      onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
+      cardConfig={cardConfig}
       entityId={entityId}
       disabled={disabled}
       className={`${className} relative overflow-hidden transition-all duration-300 ${isAnimating ? "scale-95 shadow-2xl" : "scale-100"} ${

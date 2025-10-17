@@ -2,22 +2,25 @@ import React, { useState, useEffect } from "react";
 import { Timer } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
+import { CardComponentProps } from "../../types/cardProps";
 
-export interface TimeRemainingCardProps {
+interface TimeRemainingCardSpecificProps {
   title: string;
-  entityId: string;
-  onTitleChange?: (newTitle: string) => void;
-  className?: string;
   width?: string;
   showIcon?: boolean;
   showTitle?: boolean;
   showSubtitle?: boolean;
 }
 
+export type TimeRemainingCardProps = CardComponentProps<TimeRemainingCardSpecificProps>;
+
 export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
   title,
   entityId,
   onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
   className = "",
   width = "w-full",
   showIcon = true,
@@ -35,7 +38,7 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const haEntity = entities.get(entityId);
+  const haEntity = entityId ? entities.get(entityId) : undefined;
 
   // Calculate remaining time
   const getRemainingTime = () => {
@@ -216,6 +219,10 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
       subtitle={showSubtitle ? remaining?.text || "N/A" : ""}
       icon={showIcon ? <Timer className="w-5 h-5" /> : undefined}
       onTitleChange={onTitleChange}
+      onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
+      cardConfig={cardConfig}
+      entityId={entityId}
       className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl border border-gray-700/50 shadow-xl ${className}`}
       width={width}
       height="h-16"
@@ -243,11 +250,11 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
                     a 15.9155 15.9155 0 0 1 0 -31.831"
                   fill="none"
                   stroke={
-                    progressPercentage >= 100 
+                    progressPercentage >= 100
                       ? "#10b981" // green-500
-                      : progressPercentage >= 75 
+                      : progressPercentage >= 75
                       ? "#eab308" // yellow-500
-                      : progressPercentage >= 50 
+                      : progressPercentage >= 50
                       ? "#f97316" // orange-500
                       : "#ef4444" // red-500
                   }
@@ -257,14 +264,14 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
                   className="transition-all duration-1000 drop-shadow-md"
                   style={{
                     filter: `drop-shadow(0 0 4px ${
-                      progressPercentage >= 100 
+                      progressPercentage >= 100
                         ? "rgba(16, 185, 129, 0.4)"
-                        : progressPercentage >= 75 
+                        : progressPercentage >= 75
                         ? "rgba(234, 179, 8, 0.4)"
-                        : progressPercentage >= 50 
+                        : progressPercentage >= 50
                         ? "rgba(249, 115, 22, 0.4)"
                         : "rgba(239, 68, 68, 0.4)"
-                    })`
+                    })`,
                   }}
                 />
               ) : (
@@ -283,9 +290,7 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
             </svg>
             {/* Enhanced center percentage text */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs font-bold text-white drop-shadow-md">
-                {Math.round(progressPercentage)}%
-              </span>
+              <span className="text-xs font-bold text-white drop-shadow-md">{Math.round(progressPercentage)}%</span>
             </div>
           </div>
         </div>
@@ -294,13 +299,13 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
       {/* Subtle progress indicator line at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-700/30">
         {progressPercentage > 0 ? (
-          <div 
+          <div
             className={`h-full transition-all duration-1000 ${
-              progressPercentage >= 100 
+              progressPercentage >= 100
                 ? "bg-gradient-to-r from-green-500 to-green-400"
-                : progressPercentage >= 75 
+                : progressPercentage >= 75
                 ? "bg-gradient-to-r from-yellow-500 to-yellow-400"
-                : progressPercentage >= 50 
+                : progressPercentage >= 50
                 ? "bg-gradient-to-r from-orange-500 to-orange-400"
                 : "bg-gradient-to-r from-red-500 to-red-400"
             }`}

@@ -2,12 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Check, X, Clock, Activity, BarChart3 } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
+import { CardComponentProps } from "../../types/cardProps";
 
-export interface UptimeCardProps {
+interface UptimeCardSpecificProps {
   title: string;
-  entityId: string;
-  onTitleChange?: (newTitle: string) => void;
-  className?: string;
   width?: string;
   height?: string;
   uptimeSettings?: {
@@ -16,16 +14,21 @@ export interface UptimeCardProps {
   };
 }
 
+export type UptimeCardProps = CardComponentProps<UptimeCardSpecificProps>;
+
 export const UptimeCard: React.FC<UptimeCardProps> = ({
   title,
   entityId,
   onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
   className = "",
   width = "w-full",
   uptimeSettings = { segmentDuration: "hours", segmentCount: 6 },
 }) => {
   const { entities } = useHomeAssistantStore();
-  const haEntity = entities.get(entityId);
+  const haEntity = entityId ? entities.get(entityId) : undefined;
   const [segmentStatus, setSegmentStatus] = useState<(boolean | null)[]>(new Array(uptimeSettings.segmentCount).fill(true));
   const [showHistory, setShowHistory] = useState(false);
 
@@ -136,6 +139,10 @@ export const UptimeCard: React.FC<UptimeCardProps> = ({
         subtitle={`${getStatusText()} • ${uptimePercentage}%`}
         icon={getStatusIcon()}
         onTitleChange={onTitleChange}
+        onJsonSave={onJsonSave}
+        onCardDelete={onCardDelete}
+        cardConfig={cardConfig}
+        entityId={entityId}
         onClick={handleCardClick}
         className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 cursor-pointer ${className}`}
         width={width}

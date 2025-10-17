@@ -3,14 +3,15 @@ import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { Activity, Thermometer, Droplets, Gauge, Zap, Wifi, DoorOpen, DoorClosed } from "lucide-react";
 import { useCurrentTime } from "../../hooks/useCurrentTime";
+import { CardComponentProps } from "../../types/cardProps";
 
-interface SensorStateCardProps {
+interface SensorStateCardSpecificProps {
   title: string;
-  entityId?: string;
-  onTitleChange?: (title: string, entityId?: string) => void;
 }
 
-const SensorStateCardComponent: React.FC<SensorStateCardProps> = ({ title, entityId, onTitleChange }) => {
+type SensorStateCardProps = CardComponentProps<SensorStateCardSpecificProps>;
+
+const SensorStateCardComponent: React.FC<SensorStateCardProps> = ({ title, entityId, onTitleChange, onJsonSave, onCardDelete, cardConfig }) => {
   const { entities } = useHomeAssistantStore();
   const haEntity = entityId ? entities.get(entityId) : null;
   const currentTime = useCurrentTime(30000); // Update every 30 seconds
@@ -192,6 +193,11 @@ const SensorStateCardComponent: React.FC<SensorStateCardProps> = ({ title, entit
       <Card
         title={title}
         subtitle={subtitle}
+        onTitleChange={onTitleChange}
+        onJsonSave={onJsonSave}
+        onCardDelete={onCardDelete}
+        cardConfig={cardConfig}
+        entityId={entityId}
         icon={
           <IconComponent
             className={`w-6 h-6 ${iconColor} drop-shadow-lg`}
@@ -211,15 +217,22 @@ const SensorStateCardComponent: React.FC<SensorStateCardProps> = ({ title, entit
             }}
           />
         }
-        entityId={entityId}
-        onTitleChange={onTitleChange}
         height="h-16"
       />
     );
   } catch (error) {
     console.error("SensorStateCard render error:", error);
     return (
-      <Card title={title} icon={<Activity className="w-5 h-5 text-red-400" />} entityId={entityId} onTitleChange={onTitleChange} height="h-16">
+      <Card
+        title={title}
+        icon={<Activity className="w-5 h-5 text-red-400" />}
+        entityId={entityId}
+        onTitleChange={onTitleChange}
+        onJsonSave={onJsonSave}
+        onCardDelete={onCardDelete}
+        cardConfig={cardConfig}
+        height="h-16"
+      >
         <div className="flex items-center justify-between h-full px-1">
           <div className="flex items-center gap-2">
             <div className="text-red-500 text-xl font-bold">Error</div>

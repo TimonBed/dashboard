@@ -3,19 +3,18 @@ import { Power, Play, Pause, RotateCcw, Settings, DoorOpen, Monitor, Trash2 } fr
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { useHomeAssistant } from "../../hooks/useHomeAssistant";
+import { CardComponentProps } from "../../types/cardProps";
 
-interface ButtonCardProps {
+interface ButtonCardSpecificProps {
   title: string;
   icon?: React.ReactNode;
-  iconName?: string; // Icon name for JSON override
+  iconName?: string;
   onClick?: () => void;
-  onTitleChange?: (title: string, entityId?: string) => void;
-  entityId?: string;
-  disabled?: boolean;
   loading?: boolean;
-  className?: string;
-  vibrationDuration?: number; // Duration in seconds for vibration animation
+  vibrationDuration?: number;
 }
+
+type ButtonCardProps = CardComponentProps<ButtonCardSpecificProps>;
 
 export const ButtonCard: React.FC<ButtonCardProps> = ({
   title,
@@ -23,6 +22,9 @@ export const ButtonCard: React.FC<ButtonCardProps> = ({
   iconName,
   onClick,
   onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
   entityId,
   disabled = false,
   loading = false,
@@ -167,6 +169,9 @@ export const ButtonCard: React.FC<ButtonCardProps> = ({
       icon={getIcon()}
       onClick={disabled || loading || isUnavailable ? undefined : entityId ? handleToggle : onClick}
       onTitleChange={onTitleChange}
+      onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
+      cardConfig={cardConfig}
       entityId={entityId}
       disabled={disabled}
       className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 ${className}`}

@@ -9,6 +9,7 @@ interface CardProps {
   onClick?: () => void;
   onTitleChange?: (title: string, entityId?: string) => void;
   onJsonSave?: (config: any) => void;
+  onCardDelete?: () => void;
   cardConfig?: any;
   entityId?: string;
   disabled?: boolean;
@@ -28,6 +29,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       onClick,
       onTitleChange,
       onJsonSave,
+      onCardDelete,
       cardConfig,
       entityId,
       disabled = false,
@@ -99,6 +101,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             cardConfig={cardConfig}
             onSave={handleSaveSettings}
             onSaveJson={onJsonSave}
+            onDelete={onCardDelete}
           />
         )}
       </>

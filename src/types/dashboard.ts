@@ -85,6 +85,8 @@ export interface Dashboard {
   backgroundColor?: string;
   columns: DashboardColumn[];
   layout: "grid" | "list" | "custom";
+  minColumns?: number;
+  minRows?: number;
   createdAt: string;
   updatedAt: string;
 }

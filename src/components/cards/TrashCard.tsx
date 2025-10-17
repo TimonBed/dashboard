@@ -3,12 +3,11 @@ import { Trash2 } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import Badge from "../ui/Badge";
+import { CardComponentProps } from "../../types/cardProps";
 
-export interface TrashCardProps {
+interface TrashCardSpecificProps {
   title: string;
   entities: Array<{ entity: string }>;
-  onTitleChange?: (newTitle: string) => void;
-  className?: string;
   width?: string;
   height?: string;
   showIcon?: boolean;
@@ -16,10 +15,15 @@ export interface TrashCardProps {
   showSubtitle?: boolean;
 }
 
+export type TrashCardProps = CardComponentProps<TrashCardSpecificProps>;
+
 const TrashCardComponent: React.FC<TrashCardProps> = ({
   title,
   entities,
   onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
   width = "w-full",
   height = "h-full",
   showIcon = true,
@@ -101,6 +105,9 @@ const TrashCardComponent: React.FC<TrashCardProps> = ({
       subtitle={showSubtitle ? subtitle : ""}
       icon={showIcon ? <Trash2 className="w-5 h-5" /> : undefined}
       onTitleChange={onTitleChange}
+      onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
+      cardConfig={cardConfig}
       width={width}
       height={height}
     >

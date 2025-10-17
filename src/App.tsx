@@ -108,13 +108,20 @@ function App() {
     <Route
       key={dashboard.id}
       path={dashboard.path}
-      element={<DynamicDashboard dashboard={dashboard} onCardTitleChange={handleCardTitleChange} onCardJsonSave={handleCardJsonSave(dashboard.id)} />}
+      element={
+        <DynamicDashboard
+          dashboard={dashboard}
+          onCardTitleChange={handleCardTitleChange}
+          onCardJsonSave={handleCardJsonSave(dashboard.id)}
+          onNotification={setNotification}
+        />
+      }
     />
   );
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {!hideSidebar && <Sidebar activeTab={activeTab} onTabChange={() => {}} />}
+      {!hideSidebar && <Sidebar activeTab={activeTab} onTabChange={() => {}} onDashboardsChange={handleDashboardChange} />}
       <div className={`flex-1 ${hideSidebar ? "ml-0" : "ml-16"}`}>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

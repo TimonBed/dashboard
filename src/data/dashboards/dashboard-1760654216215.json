@@ -1,0 +1,211 @@
+{
+  "id": "dashboard-1760654216215",
+  "title": "AnnaPC",
+  "path": "/annapc",
+  "description": "",
+  "icon": "Activity",
+  "backgroundColor": "bg-gray-900",
+  "columns": [
+    {
+      "id": "col-1",
+      "title": "Column 1",
+      "gridColumns": {
+        "sm": 1,
+        "md": 2,
+        "lg": 3,
+        "xl": 4
+      },
+      "cards": [
+        {
+          "id": "mealie-link-2",
+          "type": "link",
+          "title": "Mealie",
+          "url": "http://192.168.1.2:9925",
+          "subtitle": "Recipe Manager",
+          "icon": "mealie",
+          "position": {
+            "x": 1,
+            "y": 0
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": "youtube-link",
+          "type": "link",
+          "title": "YouTube",
+          "url": "https://www.youtube.com",
+          "subtitle": "Video Platform",
+          "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/youtube.svg",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "type": "room-section",
+          "cards": [],
+          "position": {
+            "x": 0,
+            "y": 5
+          },
+          "size": {
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "id": "section-1760656049648",
+          "type": "room-section",
+          "cards": [],
+          "position": {
+            "x": 0,
+            "y": 5
+          },
+          "size": {
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "id": "section-1760656382226",
+          "type": "room-section",
+          "cards": [
+            {
+              "id": "card-1760656382226",
+              "type": "link",
+              "title": "Parqet",
+              "position": {
+                "x": 0,
+                "y": 1
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              },
+              "icon": "https://cdn.brandfetch.io/idiVeAnluG/w/256/h/256/theme/dark/icon.png?c=1bxid64Mup7aczewSAYMX&t=1759220624891",
+              "url": "https://app.parqet.com/p/6675c722f6de9e89e1839e49"
+            }
+          ],
+          "position": {
+            "x": 0,
+            "y": 5
+          },
+          "size": {
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "id": "section-1760656513646",
+          "type": "room-section",
+          "cards": [
+            {
+              "id": "card-1760656513646",
+              "type": "link",
+              "title": "Rewe",
+              "position": {
+                "x": 1,
+                "y": 1
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              },
+              "url": "https://www.rewe.de/shop/",
+              "icon": "https://cdn.brandfetch.io/idG3y8uQp1/theme/dark/logo.svg?c=1bxid64Mup7aczewSAYMX&t=1667662674395"
+            }
+          ],
+          "position": {
+            "x": 0,
+            "y": 5
+          },
+          "size": {
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "id": "section-1760657803421",
+          "type": "room-section",
+          "cards": [],
+          "position": {
+            "x": 0,
+            "y": 3
+          },
+          "size": {
+            "width": 2,
+            "height": 1
+          }
+        },
+        {
+          "id": "waschmaschiene",
+          "type": "sensor-state",
+          "title": "Waschmaschiene",
+          "entityId": "binary_sensor.waschmaschiene",
+          "position": {
+            "x": 0,
+            "y": 3
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": "timer-card2",
+          "type": "time-remaining",
+          "title": "Trockner",
+          "entityId": "timer.153931628965879_time_remaining",
+          "position": {
+            "x": 0,
+            "y": 4
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": "timer-card",
+          "type": "time-remaining",
+          "title": "Spühlmaschiene",
+          "entityId": "timer.geschirrspuler_remaining_program_time",
+          "position": {
+            "x": 0,
+            "y": 5
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": "anna-calendar",
+          "type": "calendar",
+          "title": "Kalender",
+          "entityId": "calendar.anna_timon",
+          "position": {
+            "x": 1,
+            "y": 3
+          },
+          "size": {
+            "width": 2,
+            "height": 4
+          }
+        }
+      ]
+    }
+  ],
+  "layout": "grid",
+  "createdAt": "2025-10-16T22:36:56.215Z",
+  "updatedAt": "2025-10-16T23:47:06.957Z",
+  "minColumns": 8,
+  "minRows": 10
+}

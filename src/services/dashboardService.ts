@@ -65,8 +65,9 @@ class DashboardService {
     return this.dashboards.find((dashboard) => dashboard.path === path);
   }
 
-  public addDashboard(dashboard: Dashboard): void {
+  public async addDashboard(dashboard: Dashboard): Promise<void> {
     this.dashboards.push(dashboard);
+    await this.saveDashboardToFile(dashboard.id, dashboard);
   }
 
   public updateDashboard(id: string, updatedDashboard: Dashboard): void {
@@ -129,7 +130,7 @@ class DashboardService {
     return true;
   }
 
-  private async saveDashboardToFile(dashboardId: string, dashboard: Dashboard): Promise<void> {
+  public async saveDashboardToFile(dashboardId: string, dashboard: Dashboard): Promise<void> {
     const jsonStr = JSON.stringify(dashboard, null, 2);
     const fileName = `${dashboardId}.json`;
 

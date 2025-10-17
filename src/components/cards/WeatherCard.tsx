@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Cloud, CloudRain, Sun, CloudSnow, CloudDrizzle, Wind } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
+import { CardComponentProps } from "../../types/cardProps";
 
 interface WeatherForecast {
   time: string;
@@ -9,16 +10,11 @@ interface WeatherForecast {
   condition: string;
 }
 
-interface WeatherCardProps {
-  title?: string;
-  entityId?: string;
+interface WeatherCardSpecificProps {
   zipCode?: string;
-  onTitleChange?: (title: string, entityId?: string) => void;
-  onJsonSave?: (config: any) => void;
-  cardConfig?: any;
-  disabled?: boolean;
-  className?: string;
 }
+
+type WeatherCardProps = CardComponentProps<WeatherCardSpecificProps>;
 
 export const WeatherCard: React.FC<WeatherCardProps> = ({
   title = "Weather",
@@ -26,6 +22,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
   zipCode = "21033",
   onTitleChange,
   onJsonSave,
+  onCardDelete,
   cardConfig,
   disabled = false,
   className = "",
@@ -141,6 +138,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
         icon={getWeatherIcon("Cloudy")}
         onTitleChange={onTitleChange}
         onJsonSave={onJsonSave}
+        onCardDelete={onCardDelete}
         cardConfig={cardConfig}
         entityId={entityId}
         disabled={disabled}
@@ -161,6 +159,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
       icon={getWeatherIcon(currentCondition)}
       onTitleChange={onTitleChange}
       onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
       cardConfig={cardConfig}
       entityId={entityId}
       disabled={disabled}

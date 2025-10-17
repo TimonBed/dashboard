@@ -3,12 +3,10 @@ import { MapPin, Home, Car, Plane, Train, Ship, Building, User } from "lucide-re
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import Badge from "../ui/Badge";
+import { CardComponentProps } from "../../types/cardProps";
 
-export interface PersonCardProps {
+interface PersonCardSpecificProps {
   title: string;
-  entityId: string;
-  onTitleChange?: (newTitle: string) => void;
-  className?: string;
   width?: string;
   height?: string;
   showIcon?: boolean;
@@ -16,10 +14,15 @@ export interface PersonCardProps {
   showSubtitle?: boolean;
 }
 
+export type PersonCardProps = CardComponentProps<PersonCardSpecificProps>;
+
 const PersonCardComponent: React.FC<PersonCardProps> = ({
   title,
   entityId,
   onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
   className = "",
   width = "w-full",
   height = "h-16",
@@ -29,7 +32,7 @@ const PersonCardComponent: React.FC<PersonCardProps> = ({
 }) => {
   const { entities } = useHomeAssistantStore();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const haEntity = entities.get(entityId);
+  const haEntity = entityId ? entities.get(entityId) : undefined;
   const isUnavailable = haEntity ? haEntity.state === "unavailable" : false;
   const currentLocation = haEntity?.state || "unknown";
 
@@ -137,6 +140,10 @@ const PersonCardComponent: React.FC<PersonCardProps> = ({
       subtitle={showSubtitle ? subtitle : ""}
       icon={showIcon ? locationIcon : undefined}
       onTitleChange={onTitleChange}
+      onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
+      cardConfig={cardConfig}
+      entityId={entityId}
       className={`${cardBackground} ${className}`}
       width={width}
       height={height}

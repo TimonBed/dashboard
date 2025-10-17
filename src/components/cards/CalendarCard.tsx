@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card } from "./Card";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { Calendar } from "lucide-react";
+import { CardComponentProps } from "../../types/cardProps";
 
 interface CalendarEvent {
   uid: string;
@@ -19,16 +20,25 @@ interface CalendarEvent {
   all_day?: boolean;
 }
 
-interface CalendarCardProps {
+interface CalendarCardSpecificProps {
   title: string;
-  entityId: string;
-  onTitleChange?: (title: string, entityId?: string) => void;
-  className?: string;
   width?: string;
   height?: string;
 }
 
-export const CalendarCard: React.FC<CalendarCardProps> = ({ title, entityId, onTitleChange, className, width = "w-full", height = "h-full" }) => {
+type CalendarCardProps = CardComponentProps<CalendarCardSpecificProps>;
+
+export const CalendarCard: React.FC<CalendarCardProps> = ({
+  title,
+  entityId,
+  onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
+  className,
+  width = "w-full",
+  height = "h-full",
+}) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -171,7 +181,17 @@ export const CalendarCard: React.FC<CalendarCardProps> = ({ title, entityId, onT
 
   if (loading) {
     return (
-      <Card title={title} icon={<Calendar className="w-5 h-5" />} onTitleChange={onTitleChange} className={className} width={width} height={height}>
+      <Card
+        title={title}
+        icon={<Calendar className="w-5 h-5" />}
+        onTitleChange={onTitleChange}
+        onJsonSave={onJsonSave}
+        onCardDelete={onCardDelete}
+        cardConfig={cardConfig}
+        className={className}
+        width={width}
+        height={height}
+      >
         <div className="flex items-center justify-center h-full">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
         </div>
@@ -180,7 +200,17 @@ export const CalendarCard: React.FC<CalendarCardProps> = ({ title, entityId, onT
   }
 
   return (
-    <Card title={title} icon={<Calendar className="w-5 h-5" />} onTitleChange={onTitleChange} className={className} width={width} height={height}>
+    <Card
+      title={title}
+      icon={<Calendar className="w-5 h-5" />}
+      onTitleChange={onTitleChange}
+      onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
+      cardConfig={cardConfig}
+      className={className}
+      width={width}
+      height={height}
+    >
       <div className="h-full flex flex-col">
         {/* Compact Events */}
         <div className="flex-1 space-y-1 overflow-y-auto min-h-0">

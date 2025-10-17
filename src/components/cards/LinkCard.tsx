@@ -3,20 +3,29 @@ import { ExternalLink, Home, Globe, Server, Database, Settings, Monitor } from "
 import { Card } from "./Card";
 import { MealieIcon } from "../icons/MealieIcon";
 import { UniFiIcon } from "../icons/UniFiIcon";
+import { CardComponentProps } from "../../types/cardProps";
 
-interface LinkCardProps {
+interface LinkCardSpecificProps {
   title: string;
   url: string;
   icon?: string;
   subtitle?: string;
-  onTitleChange?: (title: string, entityId?: string) => void;
-  onJsonSave?: (config: any) => void;
-  cardConfig?: any;
-  disabled?: boolean;
-  className?: string;
 }
 
-export const LinkCard: React.FC<LinkCardProps> = ({ title, url, icon, subtitle, onTitleChange, onJsonSave, cardConfig, disabled = false, className = "" }) => {
+type LinkCardProps = CardComponentProps<LinkCardSpecificProps>;
+
+export const LinkCard: React.FC<LinkCardProps> = ({
+  title,
+  url,
+  icon,
+  subtitle,
+  onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
+  disabled = false,
+  className = "",
+}) => {
   const handleClick = () => {
     if (!disabled && url) {
       window.open(url, "_blank", "noopener,noreferrer");
@@ -61,12 +70,13 @@ export const LinkCard: React.FC<LinkCardProps> = ({ title, url, icon, subtitle, 
       icon={getIcon()}
       onTitleChange={onTitleChange}
       onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
       cardConfig={cardConfig}
       onClick={handleClick}
       disabled={disabled}
       className={`bg-gradient-to-br from-blue-900/90 to-blue-800/90 hover:from-blue-800/90 hover:to-blue-700/90 transition-all ${className}`}
       width="w-full"
-      height="h-16"
+      height="h-full"
     />
   );
 };

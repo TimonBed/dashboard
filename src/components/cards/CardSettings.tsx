@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { X, Save, Settings, Search, Home, Code, Edit3, AlertCircle } from "lucide-react";
+import { X, Save, Settings, Search, Home, Code, Edit3, AlertCircle, Trash2 } from "lucide-react";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
+import { getCardRequirements, validateCardConfig } from "../../types/cardRequirements";
 
 interface CardSettingsProps {
   isOpen: boolean;
@@ -10,9 +11,10 @@ interface CardSettingsProps {
   cardConfig?: any;
   onSave: (title: string, entityId?: string) => void;
   onSaveJson?: (config: any) => void;
+  onDelete?: () => void;
 }
 
-export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, title, entityId = "", cardConfig, onSave, onSaveJson }) => {
+export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, title, entityId = "", cardConfig, onSave, onSaveJson, onDelete }) => {
   const [editedTitle, setEditedTitle] = useState(title);
   const [editedEntityId, setEditedEntityId] = useState(entityId);
   const [entitySearch, setEntitySearch] = useState("");
@@ -20,6 +22,7 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
   const [activeTab, setActiveTab] = useState<"basic" | "json">("basic");
   const [jsonValue, setJsonValue] = useState(JSON.stringify(cardConfig || {}, null, 2));
   const [jsonError, setJsonError] = useState<string>("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { entities } = useHomeAssistantStore();
 
@@ -32,11 +35,21 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
     setJsonValue(JSON.stringify(cardConfig || {}, null, 2));
     setJsonError("");
     setActiveTab("basic");
+    setShowDeleteConfirm(false);
   }, [title, entityId, cardConfig, isOpen]);
 
   const handleSave = () => {
     onSave(editedTitle, editedEntityId);
     onClose();
+  };
+
+  const handleDelete = () => {
+    if (showDeleteConfirm) {
+      onDelete?.();
+      onClose();
+    } else {
+      setShowDeleteConfirm(true);
+    }
   };
 
   const validateJson = (value: string): boolean => {
@@ -59,6 +72,14 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
     if (validateJson(jsonValue)) {
       try {
         const parsedConfig = JSON.parse(jsonValue);
+
+        // Validate required fields
+        const validation = validateCardConfig(parsedConfig.type, parsedConfig);
+        if (!validation.isValid) {
+          setJsonError(`Missing required fields: ${validation.missingFields.join(", ")}`);
+          return;
+        }
+
         onSaveJson?.(parsedConfig);
         onClose();
       } catch (e: any) {
@@ -140,6 +161,44 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
         <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {activeTab === "basic" && (
             <>
+              {/* Required Fields Info */}
+              {cardConfig?.type &&
+                (() => {
+                  const requirements = getCardRequirements(cardConfig.type);
+                  if (requirements && requirements.requiredFields.length > 0) {
+                    const validation = validateCardConfig(cardConfig.type, cardConfig);
+                    return (
+                      <div
+                        className={`p-4 rounded-xl border ${
+                          validation.isValid ? "bg-green-500/10 border-green-500/30" : "bg-amber-500/10 border-amber-500/30"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${validation.isValid ? "text-green-400" : "text-amber-400"}`} />
+                          <div className="flex-1">
+                            <h4 className={`font-medium mb-2 ${validation.isValid ? "text-green-300" : "text-amber-300"}`}>
+                              {validation.isValid ? "All Required Fields Present" : "Required Fields"}
+                            </h4>
+                            <ul className="space-y-1 text-sm text-gray-300">
+                              {requirements.requiredFields.map((field) => {
+                                const isMissing = validation.missingFields.includes(field.label);
+                                return (
+                                  <li key={field.name} className={`flex items-center gap-2 ${isMissing ? "text-amber-300 font-medium" : "text-gray-400"}`}>
+                                    <span className="text-xs">{isMissing ? "⚠️" : "✓"}</span>
+                                    <span>{field.label}</span>
+                                    {field.description && <span className="text-xs text-gray-500">- {field.description}</span>}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
               {/* Title Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
@@ -341,20 +400,38 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-700/50">
-          <button onClick={onClose} className="px-4 py-2 text-gray-400 hover:text-gray-300 transition-colors">
-            Cancel
-          </button>
-          <button
-            onClick={activeTab === "json" ? handleSaveJson : handleSave}
-            disabled={isSaveDisabled}
-            className={`px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg ${
-              isSaveDisabled ? "opacity-50 cursor-not-allowed" : "hover:shadow-xl hover:scale-105"
-            }`}
-          >
-            <Save className="w-4 h-4" />
-            Save Changes
-          </button>
+        <div className="flex items-center justify-between p-6 border-t border-gray-700/50">
+          {/* Delete Button */}
+          {onDelete && (
+            <button
+              onClick={handleDelete}
+              className={`px-4 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 ${
+                showDeleteConfirm
+                  ? "bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg hover:shadow-red-500/50 hover:scale-105"
+                  : "text-red-400 hover:bg-red-500/10 hover:text-red-300"
+              }`}
+            >
+              <Trash2 className="w-4 h-4" />
+              {showDeleteConfirm ? "Click Again to Confirm" : "Remove Card"}
+            </button>
+          )}
+
+          {/* Save/Cancel Buttons */}
+          <div className="flex items-center gap-3 ml-auto">
+            <button onClick={onClose} className="px-4 py-2 text-gray-400 hover:text-gray-300 transition-colors">
+              Cancel
+            </button>
+            <button
+              onClick={activeTab === "json" ? handleSaveJson : handleSave}
+              disabled={isSaveDisabled}
+              className={`px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg ${
+                isSaveDisabled ? "opacity-50 cursor-not-allowed" : "hover:shadow-xl hover:scale-105"
+              }`}
+            >
+              <Save className="w-4 h-4" />
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </div>

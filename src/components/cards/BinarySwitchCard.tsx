@@ -3,12 +3,10 @@ import { CheckCircle, XCircle, AlertCircle, ToggleLeft, ToggleRight, Star, Power
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { useHomeAssistant } from "../../hooks/useHomeAssistant";
+import { CardComponentProps } from "../../types/cardProps";
 
-export interface BinarySwitchCardProps {
+interface BinarySwitchCardSpecificProps {
   title: string;
-  entityId: string;
-  onTitleChange?: (newTitle: string) => void;
-  className?: string;
   width?: string;
   height?: string;
   showIcon?: boolean;
@@ -16,10 +14,15 @@ export interface BinarySwitchCardProps {
   showSubtitle?: boolean;
 }
 
+export type BinarySwitchCardProps = CardComponentProps<BinarySwitchCardSpecificProps>;
+
 export const BinarySwitchCard: React.FC<BinarySwitchCardProps> = ({
   title,
   entityId,
   onTitleChange,
+  onJsonSave,
+  onCardDelete,
+  cardConfig,
   className = "",
   width = "w-full",
   height = "h-16",
@@ -29,7 +32,7 @@ export const BinarySwitchCard: React.FC<BinarySwitchCardProps> = ({
 }) => {
   const { entities } = useHomeAssistantStore();
   const { callService } = useHomeAssistant();
-  const haEntity = entities.get(entityId);
+  const haEntity = entityId ? entities.get(entityId) : undefined;
   const isUnavailable = haEntity ? haEntity.state === "unavailable" : false;
   const isOn = haEntity ? haEntity.state === "on" : false;
 
@@ -62,7 +65,7 @@ export const BinarySwitchCard: React.FC<BinarySwitchCardProps> = ({
 
   // Get dynamic icon based on entity type and state
   const getSwitchIcon = () => {
-    if (isUnavailable) return <AlertCircle className="w-3 h-3 text-red-400" />;
+    if (isUnavailable || !entityId) return <AlertCircle className="w-3 h-3 text-red-400" />;
 
     const domain = entityId.split(".")[0];
     const friendlyName = haEntity?.attributes?.friendly_name?.toLowerCase() || "";
@@ -83,7 +86,7 @@ export const BinarySwitchCard: React.FC<BinarySwitchCardProps> = ({
 
   // Get dynamic color based on entity type and state
   const getSwitchColor = () => {
-    if (isUnavailable) return "from-red-400 to-red-500";
+    if (isUnavailable || !entityId) return "from-red-400 to-red-500";
 
     const domain = entityId.split(".")[0];
     const friendlyName = haEntity?.attributes?.friendly_name?.toLowerCase() || "";
@@ -104,7 +107,7 @@ export const BinarySwitchCard: React.FC<BinarySwitchCardProps> = ({
 
   // Handle toggle functionality
   const handleToggle = async () => {
-    if (isUnavailable || !haEntity) return;
+    if (isUnavailable || !haEntity || !entityId) return;
 
     try {
       const domain = entityId.split(".")[0];
@@ -121,6 +124,10 @@ export const BinarySwitchCard: React.FC<BinarySwitchCardProps> = ({
       subtitle={showSubtitle ? getSubtitle() : ""}
       icon={showIcon ? getIcon() : undefined}
       onTitleChange={onTitleChange}
+      onJsonSave={onJsonSave}
+      onCardDelete={onCardDelete}
+      cardConfig={cardConfig}
+      entityId={entityId}
       className={`${getCardBackground()} ${className} cursor-pointer`}
       width={width}
       height={height}
