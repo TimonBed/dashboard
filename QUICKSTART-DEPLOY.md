@@ -30,7 +30,23 @@ This will:
 
 ---
 
-### 2. Enable GitHub Container Registry
+### 2. Configure Environment Variables (Optional)
+
+**Add default Home Assistant settings to GitHub Secrets:**
+
+1. Go to: `https://github.com/YOUR_USERNAME/YOUR_REPO/settings/secrets/actions`
+2. Add these optional secrets:
+   - `VITE_HA_URL` - Your Home Assistant URL (e.g., `http://homeassistant.local:8123`)
+   - `VITE_HA_TOKEN` - Your Long-Lived Access Token
+   - `VITE_OPENWEATHER_API_KEY` - Your OpenWeather API key (optional)
+
+**Note**: These are optional. You can configure connection via the UI Settings page after deployment.
+
+For details, see [ENV_SETUP.md](ENV_SETUP.md)
+
+---
+
+### 3. Enable GitHub Container Registry
 
 **Go to your repository settings:**
 ```
@@ -47,7 +63,7 @@ https://github.com/YOUR_USERNAME/YOUR_REPO/settings/actions
 
 ---
 
-### 3. Setup Portainer
+### 4. Setup Portainer
 
 **Login to Portainer:**
 ```
@@ -81,7 +97,7 @@ https://your-server:9443
 
 ---
 
-### 4. First Deploy
+### 5. First Deploy
 
 **Commit and push:**
 ```bash

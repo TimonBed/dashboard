@@ -13,6 +13,16 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Build arguments for environment variables
+ARG VITE_HA_URL
+ARG VITE_HA_TOKEN
+ARG VITE_OPENWEATHER_API_KEY
+
+# Set environment variables for Vite build
+ENV VITE_HA_URL=$VITE_HA_URL
+ENV VITE_HA_TOKEN=$VITE_HA_TOKEN
+ENV VITE_OPENWEATHER_API_KEY=$VITE_OPENWEATHER_API_KEY
+
 # Build the app
 RUN npm run build
 

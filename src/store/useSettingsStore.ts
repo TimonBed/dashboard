@@ -15,9 +15,9 @@ interface SettingsActions {
 }
 
 const defaultSettings: SettingsState = {
-  homeAssistantIP: "",
-  homeAssistantToken: "",
-  openWeatherApiKey: "",
+  homeAssistantIP: import.meta.env.VITE_HA_URL || "",
+  homeAssistantToken: import.meta.env.VITE_HA_TOKEN || "",
+  openWeatherApiKey: import.meta.env.VITE_OPENWEATHER_API_KEY || "",
   autoConnect: true,
 };
 

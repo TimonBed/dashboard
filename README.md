@@ -30,8 +30,14 @@ A modern, real-time dashboard alternative to Home Assistant's Lovelace UI built 
    ```
 
 2. **Configure Home Assistant connection:**
-   - Update the WebSocket URL in `src/hooks/useHomeAssistant.ts`
-   - Update the access token in `src/hooks/useHomeAssistant.ts`
+   - Copy `.env.example` to `.env`
+   - Set your Home Assistant URL and token in `.env`:
+     ```
+     VITE_HA_URL=http://homeassistant.local:8123
+     VITE_HA_TOKEN=your_long_lived_access_token
+     ```
+   - These values can also be overridden via the UI Settings page
+   - See [ENV_SETUP.md](ENV_SETUP.md) for detailed configuration guide
 
 3. **Start development server:**
    ```bash
@@ -65,11 +71,21 @@ See [PRODUCTION.md](./PRODUCTION.md) for detailed deployment guide.
 ## Configuration
 
 ### Home Assistant Connection
-The dashboard connects to Home Assistant using:
-- **WebSocket URL**: `ws://192.168.1.4:8123/api/websocket`
-- **Access Token**: Configured in the code
 
-To change these settings, edit `src/hooks/useHomeAssistant.ts`.
+The dashboard supports multiple configuration methods:
+
+1. **Environment Variables** (recommended for defaults)
+   - Set in `.env` file: `VITE_HA_URL` and `VITE_HA_TOKEN`
+   - Used as defaults when UI settings are empty
+   - See [ENV_SETUP.md](ENV_SETUP.md) for detailed guide
+
+2. **UI Settings Page** (recommended for runtime changes)
+   - Navigate to Settings in the dashboard
+   - Configure URL and token
+   - Overrides environment variables
+   - Persists in browser localStorage
+
+**Priority**: UI Settings > Environment Variables > Empty
 
 ### Dashboard Icons
 You can use both named icons and image URLs for cards and dashboards.

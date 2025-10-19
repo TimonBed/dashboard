@@ -1,6 +1,14 @@
 #!/bin/bash
 
 # Home Assistant Dashboard Deployment Script
+#
+# Environment Variables (optional):
+#   VITE_HA_URL - Home Assistant URL (e.g., http://homeassistant.local:8123)
+#   VITE_HA_TOKEN - Home Assistant Long-Lived Access Token
+#   VITE_OPENWEATHER_API_KEY - OpenWeather API key
+#
+# These can be set in .env file or exported in shell
+# See ENV_SETUP.md for detailed configuration guide
 
 set -e
 
@@ -72,9 +80,22 @@ if ! docker info &> /dev/null; then
     exit 1
 fi
 
+# Check if .env file exists and inform user
+if [ -f .env ]; then
+    print_status "Found .env file - environment variables will be included in build"
+    # Export variables from .env for docker-compose
+    export $(cat .env | grep -v '^#' | xargs)
+else
+    print_warning "No .env file found - using empty defaults (can configure via UI later)"
+fi
+
 # Build the image
 print_status "Building Docker image..."
-docker build -t "$IMAGE_NAME" .
+docker build \
+    --build-arg VITE_HA_URL="${VITE_HA_URL}" \
+    --build-arg VITE_HA_TOKEN="${VITE_HA_TOKEN}" \
+    --build-arg VITE_OPENWEATHER_API_KEY="${VITE_OPENWEATHER_API_KEY}" \
+    -t "$IMAGE_NAME" .
 print_success "Image built successfully!"
 
 # Deploy based on type
@@ -148,4 +169,5 @@ print_status "Useful commands:"
 print_status "  View logs: docker logs -f $CONTAINER_NAME"
 print_status "  Stop: docker stop $CONTAINER_NAME"
 print_status "  Restart: docker restart $CONTAINER_NAME"
+
 

@@ -1,6 +1,14 @@
 #!/bin/bash
 
 # Home Assistant Dashboard Build Script
+# 
+# Environment Variables (optional):
+#   VITE_HA_URL - Home Assistant URL (e.g., http://homeassistant.local:8123)
+#   VITE_HA_TOKEN - Home Assistant Long-Lived Access Token
+#   VITE_OPENWEATHER_API_KEY - OpenWeather API key
+#
+# These can be set in .env file or passed as build arguments
+# See ENV_SETUP.md for detailed configuration guide
 
 set -e
 
@@ -49,9 +57,20 @@ FULL_IMAGE_NAME="${IMAGE_NAME}:${VERSION}"
 
 print_status "Building image: ${FULL_IMAGE_NAME}"
 
-# Build the Docker image
+# Check if .env file exists and inform user
+if [ -f .env ]; then
+    print_status "Found .env file - environment variables will be included in build"
+else
+    print_warning "No .env file found - using empty defaults (can configure via UI later)"
+fi
+
+# Build the Docker image with build args from environment
 print_status "Starting Docker build..."
-if docker build -t "${FULL_IMAGE_NAME}" .; then
+if docker build \
+    --build-arg VITE_HA_URL="${VITE_HA_URL}" \
+    --build-arg VITE_HA_TOKEN="${VITE_HA_TOKEN}" \
+    --build-arg VITE_OPENWEATHER_API_KEY="${VITE_OPENWEATHER_API_KEY}" \
+    -t "${FULL_IMAGE_NAME}" .; then
     print_success "Docker image built successfully!"
 else
     print_error "Docker build failed!"
@@ -100,4 +119,5 @@ else
 fi
 
 print_success "Build process completed!"
+
 

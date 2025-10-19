@@ -1,5 +1,13 @@
 @echo off
 REM Home Assistant Dashboard Build Script for Windows
+REM 
+REM Environment Variables (optional):
+REM   VITE_HA_URL - Home Assistant URL (e.g., http://homeassistant.local:8123)
+REM   VITE_HA_TOKEN - Home Assistant Long-Lived Access Token
+REM   VITE_OPENWEATHER_API_KEY - OpenWeather API key
+REM
+REM These can be set in .env file or as system environment variables
+REM See ENV_SETUP.md for detailed configuration guide
 
 echo 🏗️  Building Home Assistant Dashboard...
 
@@ -26,9 +34,16 @@ set FULL_IMAGE_NAME=%IMAGE_NAME%:%VERSION%
 
 echo [INFO] Building image: %FULL_IMAGE_NAME%
 
-REM Build the Docker image
+REM Check if .env file exists and inform user
+if exist .env (
+    echo [INFO] Found .env file - environment variables will be included in build
+) else (
+    echo [WARNING] No .env file found - using empty defaults ^(can configure via UI later^)
+)
+
+REM Build the Docker image with build args from environment
 echo [INFO] Starting Docker build...
-docker build -t %FULL_IMAGE_NAME% .
+docker build --build-arg VITE_HA_URL=%VITE_HA_URL% --build-arg VITE_HA_TOKEN=%VITE_HA_TOKEN% --build-arg VITE_OPENWEATHER_API_KEY=%VITE_OPENWEATHER_API_KEY% -t %FULL_IMAGE_NAME% .
 if %errorlevel% neq 0 (
     echo [ERROR] Docker build failed!
     exit /b 1
@@ -76,4 +91,5 @@ if /i "%choice%"=="y" (
 
 echo [SUCCESS] Build process completed!
 pause
+
 

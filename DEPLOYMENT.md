@@ -32,6 +32,22 @@ Add these secrets:
 - Webhook URL from Portainer (see below how to get it)
 - Example: `https://your-server:9443/api/webhooks/12345678-1234-1234-1234-123456789abc`
 
+#### Optional Secrets (Home Assistant Default Configuration):
+
+**`VITE_HA_URL`**
+- Your Home Assistant URL (e.g., `http://homeassistant.local:8123`)
+- This will be baked into the built app as a default value
+- Can be overridden via the UI Settings page
+
+**`VITE_HA_TOKEN`**
+- Your Home Assistant Long-Lived Access Token
+- Generate from: Profile → Long-Lived Access Tokens
+- This will be baked into the built app as a default value
+- Can be overridden via the UI Settings page
+
+**`VITE_OPENWEATHER_API_KEY`** (optional)
+- Your OpenWeather API key if using weather features
+
 ---
 
 ### 2. Portainer Webhook Setup

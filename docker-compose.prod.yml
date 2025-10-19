@@ -14,8 +14,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      # Optional: Set Home Assistant URL if needed
-      # - HA_URL=http://homeassistant.local:8123
+      # Note: Home Assistant credentials are baked into the build
+      # Configure them in Settings UI or rebuild with build args if needed
     volumes:
       # Persist dashboard configurations
       - ha-dashboard-data:/app/dist/data/dashboards

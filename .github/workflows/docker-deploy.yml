@@ -52,6 +52,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=ghcr.io/${{ steps.repo.outputs.repository }}:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ steps.repo.outputs.repository }}:buildcache,mode=max
+          build-args: |
+            VITE_HA_URL=${{ secrets.VITE_HA_URL }}
+            VITE_HA_TOKEN=${{ secrets.VITE_HA_TOKEN }}
+            VITE_OPENWEATHER_API_KEY=${{ secrets.VITE_OPENWEATHER_API_KEY }}
 
       # - name: Trigger Portainer Webhook
       #   if: success()

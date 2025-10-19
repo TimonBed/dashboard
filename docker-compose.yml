@@ -1,6 +1,13 @@
 services:
   ha-dashboard:
-    build: .
+    build:
+      context: .
+      args:
+        # Build-time environment variables for Vite
+        # These will be baked into the built app
+        - VITE_HA_URL=${VITE_HA_URL}
+        - VITE_HA_TOKEN=${VITE_HA_TOKEN}
+        - VITE_OPENWEATHER_API_KEY=${VITE_OPENWEATHER_API_KEY}
     container_name: ha-dashboard
     ports:
       - "3002:3001"
