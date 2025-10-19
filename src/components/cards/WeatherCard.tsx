@@ -29,35 +29,31 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
   disabled = false,
   className = "",
 }) => {
-  const { entities } = useHomeAssistantStore();
   const { openWeatherApiKey } = useSettingsStore();
   const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
   const [currentCondition, setCurrentCondition] = useState<string>("Cloudy");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [clickedSegment, setClickedSegment] = useState<{ condition: string; timeout: NodeJS.Timeout | null } | null>(null);
-
-  useEffect(() => {
-    fetchWeatherData();
-  }, [entityId, zipCode, openWeatherApiKey]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (clickedSegment?.timeout) {
-        clearTimeout(clickedSegment.timeout);
-      }
-    };
-  }, [clickedSegment]);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
   const fetchWeatherData = useCallback(async () => {
+    const now = Date.now();
+    const tenMinutes = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+    // Only fetch if it's been more than 10 minutes since last fetch
+    if (now - lastFetchTime < tenMinutes && forecasts.length > 0) {
+      return;
+    }
+
     setError(null);
     setLoading(true);
+    setLastFetchTime(now);
 
     try {
       // First, try to get data from Home Assistant weather entity
       if (entityId) {
-        const haEntity = entities.get(entityId);
+        const haEntity = useHomeAssistantStore.getState().entities.get(entityId);
         if (haEntity && haEntity.attributes.forecast) {
           // Get 6 forecasts over 18 hours (every 3 hours)
           const forecasts: WeatherForecast[] = [];
@@ -85,8 +81,24 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
             });
           }
 
-          setForecasts(forecasts);
-          setCurrentCondition(haEntity.state);
+          // Only update state if data has actually changed
+          const newForecasts = forecasts;
+          const newCondition = haEntity.state;
+
+          setForecasts((prevForecasts) => {
+            const hasChanged =
+              prevForecasts.length !== newForecasts.length ||
+              prevForecasts.some(
+                (prev, index) =>
+                  !newForecasts[index] ||
+                  prev.temperature !== newForecasts[index].temperature ||
+                  prev.condition !== newForecasts[index].condition ||
+                  prev.icon !== newForecasts[index].icon
+              );
+            return hasChanged ? newForecasts : prevForecasts;
+          });
+
+          setCurrentCondition((prevCondition) => (prevCondition !== newCondition ? newCondition : prevCondition));
           setLoading(false);
           return;
         }
@@ -121,8 +133,24 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
           });
         }
 
-        setForecasts(forecasts);
-        setCurrentCondition(data.list[0].weather[0].main);
+        // Only update state if data has actually changed
+        const newForecasts = forecasts;
+        const newCondition = data.list[0].weather[0].main;
+
+        setForecasts((prevForecasts) => {
+          const hasChanged =
+            prevForecasts.length !== newForecasts.length ||
+            prevForecasts.some(
+              (prev, index) =>
+                !newForecasts[index] ||
+                prev.temperature !== newForecasts[index].temperature ||
+                prev.condition !== newForecasts[index].condition ||
+                prev.icon !== newForecasts[index].icon
+            );
+          return hasChanged ? newForecasts : prevForecasts;
+        });
+
+        setCurrentCondition((prevCondition) => (prevCondition !== newCondition ? newCondition : prevCondition));
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(`Failed to fetch weather data: ${errorData.message || response.statusText}`);
@@ -133,7 +161,20 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [entityId, zipCode, openWeatherApiKey, entities]);
+  }, [entityId, zipCode, openWeatherApiKey, lastFetchTime, forecasts.length]);
+
+  useEffect(() => {
+    fetchWeatherData();
+  }, [fetchWeatherData]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (clickedSegment?.timeout) {
+        clearTimeout(clickedSegment.timeout);
+      }
+    };
+  }, [clickedSegment]);
 
   const getWeatherIconUrl = useCallback((iconCode: string) => {
     return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
@@ -177,6 +218,67 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
       setClickedSegment({ condition, timeout });
     },
     [clickedSegment]
+  );
+
+  // Memoize condition bar content
+  const conditionBarContent = useMemo(() => {
+    const groupedForecasts: { icon: string; condition: string; count: number; width: number }[] = [];
+    let currentGroup = { icon: forecasts[0]?.icon || "", condition: forecasts[0]?.condition || "", count: 0, width: 0 };
+
+    forecasts.forEach((forecast) => {
+      if (forecast.icon === currentGroup.icon && forecast.condition === currentGroup.condition) {
+        currentGroup.count++;
+      } else {
+        if (currentGroup.count > 0) {
+          groupedForecasts.push({ ...currentGroup, width: (currentGroup.count / forecasts.length) * 100 });
+        }
+        currentGroup = { icon: forecast.icon, condition: forecast.condition, count: 1, width: 0 };
+      }
+    });
+
+    if (currentGroup.count > 0) {
+      groupedForecasts.push({ ...currentGroup, width: (currentGroup.count / forecasts.length) * 100 });
+    }
+
+    const getBackgroundColor = (condition: string) => {
+      const conditionLower = condition.toLowerCase();
+      if (conditionLower.includes("rain")) return "bg-blue-500/30";
+      if (conditionLower.includes("cloud")) return "bg-gray-500/30";
+      if (conditionLower.includes("sun") || conditionLower.includes("clear")) return "bg-yellow-500/30";
+      if (conditionLower.includes("snow")) return "bg-blue-200/30";
+      if (conditionLower.includes("drizzle")) return "bg-blue-400/30";
+      if (conditionLower.includes("thunderstorm")) return "bg-purple-500/30";
+      return "bg-gray-600/30";
+    };
+
+    return groupedForecasts.map((group, index) => (
+      <div
+        key={index}
+        className={`flex items-center justify-center border-r border-gray-600/30 last:border-r-0 ${getBackgroundColor(
+          group.condition
+        )} cursor-pointer hover:opacity-80 transition-opacity`}
+        style={{ width: `${group.width}%` }}
+        onClick={() => handleSegmentClick(group.condition)}
+      >
+        {clickedSegment?.condition === group.condition ? (
+          <span className="text-white text-xs font-medium text-center px-1">{translateCondition(group.condition)}</span>
+        ) : (
+          <img src={getWeatherIconUrl(group.icon)} alt={group.condition} className="w-10 h-10" />
+        )}
+      </div>
+    ));
+  }, [forecasts, clickedSegment, handleSegmentClick, translateCondition, getWeatherIconUrl]);
+
+  // Memoize forecast content
+  const forecastContent = useMemo(
+    () =>
+      forecasts.map((forecast, index) => (
+        <div key={index} className="flex flex-col items-center justify-center space-y-0.5">
+          <div className="text-gray-400 text-xs">{forecast.time}</div>
+          <div className="text-white text-sm font-semibold">{forecast.temperature}°</div>
+        </div>
+      )),
+    [forecasts]
   );
 
   if (loading) {
@@ -240,70 +342,11 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
       <div className="h-full flex flex-col space-y-1.5 -mt-1">
         {/* Condition Bar */}
         <div className="relative w-full h-6 rounded-lg overflow-hidden flex-shrink-0">
-          <div className="absolute inset-0 flex">
-            {useMemo(() => {
-              const groupedForecasts: { icon: string; condition: string; count: number; width: number }[] = [];
-              let currentGroup = { icon: forecasts[0]?.icon || "", condition: forecasts[0]?.condition || "", count: 0, width: 0 };
-
-              forecasts.forEach((forecast) => {
-                if (forecast.icon === currentGroup.icon && forecast.condition === currentGroup.condition) {
-                  currentGroup.count++;
-                } else {
-                  if (currentGroup.count > 0) {
-                    groupedForecasts.push({ ...currentGroup, width: (currentGroup.count / forecasts.length) * 100 });
-                  }
-                  currentGroup = { icon: forecast.icon, condition: forecast.condition, count: 1, width: 0 };
-                }
-              });
-
-              if (currentGroup.count > 0) {
-                groupedForecasts.push({ ...currentGroup, width: (currentGroup.count / forecasts.length) * 100 });
-              }
-
-              const getBackgroundColor = (condition: string) => {
-                const conditionLower = condition.toLowerCase();
-                if (conditionLower.includes("rain")) return "bg-blue-500/30";
-                if (conditionLower.includes("cloud")) return "bg-gray-500/30";
-                if (conditionLower.includes("sun") || conditionLower.includes("clear")) return "bg-yellow-500/30";
-                if (conditionLower.includes("snow")) return "bg-blue-200/30";
-                if (conditionLower.includes("drizzle")) return "bg-blue-400/30";
-                if (conditionLower.includes("thunderstorm")) return "bg-purple-500/30";
-                return "bg-gray-600/30";
-              };
-
-              return groupedForecasts.map((group, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center justify-center border-r border-gray-600/30 last:border-r-0 ${getBackgroundColor(
-                    group.condition
-                  )} cursor-pointer hover:opacity-80 transition-opacity`}
-                  style={{ width: `${group.width}%` }}
-                  onClick={() => handleSegmentClick(group.condition)}
-                >
-                  {clickedSegment?.condition === group.condition ? (
-                    <span className="text-white text-xs font-medium text-center px-1">{translateCondition(group.condition)}</span>
-                  ) : (
-                    <img src={getWeatherIconUrl(group.icon)} alt={group.condition} className="w-10 h-10" />
-                  )}
-                </div>
-              ));
-            }, [forecasts, clickedSegment, handleSegmentClick, translateCondition, getWeatherIconUrl])}
-          </div>
+          <div className="absolute inset-0 flex">{conditionBarContent}</div>
         </div>
 
         {/* Hourly Forecast */}
-        <div className="grid grid-cols-6 gap-1.5 flex-1 content-start">
-          {useMemo(
-            () =>
-              forecasts.map((forecast, index) => (
-                <div key={index} className="flex flex-col items-center justify-center space-y-0.5">
-                  <div className="text-gray-400 text-xs">{forecast.time}</div>
-                  <div className="text-white text-sm font-semibold">{forecast.temperature}°</div>
-                </div>
-              )),
-            [forecasts]
-          )}
-        </div>
+        <div className="grid grid-cols-6 gap-1.5 flex-1 content-start">{forecastContent}</div>
       </div>
     </Card>
   );
