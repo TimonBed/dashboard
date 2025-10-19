@@ -368,9 +368,13 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       const cellWidth = gridWidth / maxX;
       const cellHeight = 64;
 
+      // Account for CSS grid gap (8px) in calculations
+      const effectiveCellWidth = cellWidth + 8; // cellWidth + gap
+      const effectiveCellHeight = cellHeight + 8; // cellHeight + gap
+
       // Calculate new size in grid units
-      const newWidth = Math.max(1, Math.round((resizeStart.width * cellWidth + deltaX) / cellWidth));
-      const newHeight = Math.max(1, Math.round((resizeStart.height * cellHeight + deltaY) / cellHeight));
+      const newWidth = Math.max(1, Math.round((resizeStart.width * effectiveCellWidth + deltaX) / effectiveCellWidth));
+      const newHeight = Math.max(1, Math.round((resizeStart.height * effectiveCellHeight + deltaY) / effectiveCellHeight));
 
       // Update live size indicator
       setCurrentResizeSize({ width: newWidth, height: newHeight });
@@ -456,8 +460,12 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       const mouseX = e.clientX - gridRect.left;
       const mouseY = e.clientY - gridRect.top;
 
-      const gridX = Math.floor(mouseX / (cellWidth + 8)); // +8 for gap
-      const gridY = Math.floor(mouseY / (cellHeight + 8)); // +8 for gap
+      // Account for CSS grid gap (8px) in calculations
+      const effectiveCellWidth = cellWidth + 8; // cellWidth + gap
+      const effectiveCellHeight = cellHeight + 8; // cellHeight + gap
+
+      const gridX = Math.floor(mouseX / effectiveCellWidth);
+      const gridY = Math.floor(mouseY / effectiveCellHeight);
 
       // Clamp to grid boundaries
       const clampedX = Math.max(0, Math.min(gridX, maxX - 1));

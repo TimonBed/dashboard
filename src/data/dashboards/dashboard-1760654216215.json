@@ -103,6 +103,42 @@
           }
         },
         {
+          "id": "card-1760902097286",
+          "type": "uptime",
+          "title": "Home Assistant",
+          "entityId": "sensor.home_assistant_status",
+          "uptimeSettings": {
+            "segmentDuration": "hours",
+            "segmentCount": 6
+          },
+          "position": {
+            "x": 0,
+            "y": 9
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
+          "id": "card-1760902097286",
+          "type": "uptime",
+          "title": "Mealie",
+          "entityId": "sensor.food_status",
+          "uptimeSettings": {
+            "segmentDuration": "hours",
+            "segmentCount": 6
+          },
+          "position": {
+            "x": 0,
+            "y": 8
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
           "id": "section-1760656513646",
           "type": "room-section",
           "cards": [
@@ -173,6 +209,21 @@
           }
         },
         {
+          "id": "card-1760888242426",
+          "type": "time-remaining",
+          "title": "3D Drucker Zeit",
+          "entityId": "sensor.p1p_01s00c330500093_print_progress",
+          "remainingTimeEntityId": "sensor.p1p_01s00c330500093_remaining_time",
+          "position": {
+            "x": 0,
+            "y": 6
+          },
+          "size": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        {
           "id": "timer-card",
           "type": "time-remaining",
           "title": "Spühlmaschiene",
@@ -233,7 +284,7 @@
   ],
   "layout": "grid",
   "createdAt": "2025-10-16T22:36:56.215Z",
-  "updatedAt": "2025-10-16T23:47:06.957Z",
-  "minColumns": 8,
-  "minRows": 10
+  "updatedAt": "2025-10-19T21:35:06.243Z",
+  "minColumns": 3,
+  "minRows": 5
 }

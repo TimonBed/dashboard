@@ -110,6 +110,42 @@
                 "width": 1,
                 "height": 1
               }
+            },
+            {
+              "id": "card-1760902097286",
+              "type": "uptime",
+              "title": "Home Assistant",
+              "entityId": "sensor.home_assistant_status",
+              "uptimeSettings": {
+                "segmentDuration": "hours",
+                "segmentCount": 6
+              },
+              "position": {
+                "x": 0,
+                "y": 18
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
+            },
+                        {
+              "id": "card-1760902097286",
+              "type": "uptime",
+              "title": "Mealie",
+              "entityId": "sensor.food_status",
+              "uptimeSettings": {
+                "segmentDuration": "hours",
+                "segmentCount": 6
+              },
+              "position": {
+                "x": 1,
+                "y": 18
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             }
           ],
           "position": {
