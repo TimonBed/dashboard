@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { X, Save, Settings, Search, Home, Code, Edit3, AlertCircle, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Save, Settings, Search, Home, Code, Edit3, AlertCircle, Trash2, History } from "lucide-react";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
+import { useSettingsStore } from "../../store/useSettingsStore";
 import { getCardRequirements, validateCardConfig } from "../../types/cardRequirements";
 
 interface CardSettingsProps {
@@ -19,15 +20,68 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
   const [editedEntityId, setEditedEntityId] = useState(entityId);
   const [entitySearch, setEntitySearch] = useState("");
   const [showEntityList, setShowEntityList] = useState(false);
-  const [activeTab, setActiveTab] = useState<"basic" | "json">("basic");
+  const [activeTab, setActiveTab] = useState<"basic" | "json" | "history">("basic");
   const [jsonValue, setJsonValue] = useState(JSON.stringify(cardConfig || {}, null, 2));
   const [jsonError, setJsonError] = useState<string>("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [historyData, setHistoryData] = useState<Array<{ time: string; state: string; attributes: any }>>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   const { entities } = useHomeAssistantStore();
 
   // Get current entity data for display
   const haEntity = editedEntityId ? entities.get(editedEntityId) : null;
+
+  // Fetch history data using REST API
+  const fetchHistory = async () => {
+    if (!editedEntityId) return;
+
+    setIsLoadingHistory(true);
+    try {
+      const endTime = new Date();
+      const startTime = new Date(endTime.getTime() - 24 * 60 * 60 * 1000); // Last 24 hours
+
+      // Get Home Assistant URL and token from settings
+      const { homeAssistantIP, homeAssistantToken } = useSettingsStore.getState();
+      if (!homeAssistantIP || !homeAssistantToken) {
+        throw new Error("Home Assistant not configured");
+      }
+
+      // Build the API URL
+      const baseUrl = homeAssistantIP.startsWith("http") ? homeAssistantIP : `http://${homeAssistantIP}`;
+      const apiUrl = `${baseUrl}/api/history/period/${startTime.toISOString()}?end_time=${endTime.toISOString()}&filter_entity_id=${editedEntityId}`;
+
+      const response = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${homeAssistantToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data && data[0] && data[0].length > 0) {
+        const history = data[0];
+        const processedData = history.map((entry: any) => ({
+          time: new Date(entry.last_changed).toLocaleString(),
+          state: entry.state,
+          attributes: entry.attributes || {},
+        }));
+        setHistoryData(processedData);
+      } else {
+        setHistoryData([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch history:", error);
+      setHistoryData([]);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   React.useEffect(() => {
     setEditedTitle(title);
@@ -37,6 +91,13 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
     setActiveTab("basic");
     setShowDeleteConfirm(false);
   }, [title, entityId, cardConfig, isOpen]);
+
+  // Fetch history when history tab is opened
+  useEffect(() => {
+    if (activeTab === "history" && editedEntityId) {
+      fetchHistory();
+    }
+  }, [activeTab, editedEntityId]);
 
   const handleSave = () => {
     onSave(editedTitle, editedEntityId);
@@ -154,6 +215,15 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
           >
             <Code className="w-4 h-4" />
             <span className="font-medium">JSON Editor</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={`flex-1 px-6 py-3 flex items-center justify-center gap-2 transition-colors ${
+              activeTab === "history" ? "bg-blue-500/10 border-b-2 border-blue-500 text-blue-400" : "text-gray-400 hover:text-gray-300 hover:bg-white/5"
+            }`}
+          >
+            <History className="w-4 h-4" />
+            <span className="font-medium">History</span>
           </button>
         </div>
 
@@ -391,6 +461,165 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
                       <div>• Edit the raw JSON configuration of this card</div>
                       <div>• Changes will be validated before saving</div>
                       <div>• Invalid JSON cannot be saved</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === "history" && (
+            <>
+              {/* History Tab */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white">Entity History</h3>
+                  <button
+                    onClick={fetchHistory}
+                    disabled={isLoadingHistory}
+                    className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <History className="w-4 h-4" />
+                    {isLoadingHistory ? "Loading..." : "Refresh"}
+                  </button>
+                </div>
+
+                {!editedEntityId ? (
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+                    <div className="text-sm text-yellow-300">
+                      <div className="font-medium mb-1">No Entity Selected</div>
+                      <div>Please select an entity to view its history.</div>
+                    </div>
+                  </div>
+                ) : isLoadingHistory ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    <span className="ml-3 text-gray-400">Loading history...</span>
+                  </div>
+                ) : historyData.length === 0 ? (
+                  <div className="bg-gray-500/10 border border-gray-500/20 rounded-xl p-4">
+                    <div className="text-sm text-gray-300">
+                      <div className="font-medium mb-1">No History Data</div>
+                      <div>No state changes found for this entity in the last 24 hours.</div>
+                      <div className="text-xs text-gray-400 mt-2">
+                        Make sure the Recorder integration is enabled in Home Assistant and this entity has history tracking enabled.
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-800/50 border border-gray-600/50 rounded-xl overflow-hidden">
+                    {/* History Graph */}
+                    <div className="h-64 p-4">
+                      <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        {/* Grid lines */}
+                        <defs>
+                          <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" />
+                          </pattern>
+                        </defs>
+                        <rect width="100" height="100" fill="url(#grid)" />
+
+                        {/* Y-axis labels */}
+                        {[0, 25, 50, 75, 100].map((value) => (
+                          <text key={value} x="2" y={100 - value + 2} fontSize="3" fill="rgba(255,255,255,0.6)" textAnchor="start">
+                            {value}%
+                          </text>
+                        ))}
+
+                        {/* X-axis labels */}
+                        {[0, 25, 50, 75, 100].map((value) => {
+                          const time = new Date(Date.now() - ((100 - value) * 24 * 60 * 60 * 1000) / 100);
+                          return (
+                            <text key={value} x={value} y="98" fontSize="2.5" fill="rgba(255,255,255,0.6)" textAnchor="middle">
+                              {time.getHours().toString().padStart(2, "0")}:{time.getMinutes().toString().padStart(2, "0")}
+                            </text>
+                          );
+                        })}
+
+                        {/* Process data for graph */}
+                        {(() => {
+                          if (historyData.length === 0) return null;
+
+                          // Convert history data to numeric values and normalize
+                          const numericData = historyData
+                            .map((entry) => {
+                              const value = parseFloat(entry.state);
+                              return isNaN(value) ? null : value;
+                            })
+                            .filter((value) => value !== null);
+
+                          if (numericData.length === 0) return null;
+
+                          const minValue = Math.min(...numericData);
+                          const maxValue = Math.max(...numericData);
+                          const valueRange = maxValue - minValue;
+
+                          // Generate path points
+                          const pathPoints = historyData
+                            .map((entry, index) => {
+                              const value = parseFloat(entry.state);
+                              if (isNaN(value)) return null;
+
+                              const x = (index / (historyData.length - 1)) * 100;
+                              const y = valueRange > 0 ? 100 - ((value - minValue) / valueRange) * 100 : 50;
+                              return `${index === 0 ? "M" : "L"} ${x},${y}`;
+                            })
+                            .filter((point) => point !== null);
+
+                          const pathData = pathPoints.join(" ");
+
+                          return (
+                            <>
+                              {/* Area under the line */}
+                              <path d={`${pathData} L 100,100 L 0,100 Z`} fill="rgba(59, 130, 246, 0.2)" className="transition-all duration-1000" />
+
+                              {/* Main line */}
+                              <path d={pathData} stroke="rgb(59, 130, 246)" strokeWidth="0.5" fill="none" className="transition-all duration-1000" />
+
+                              {/* Data points */}
+                              {historyData.map((entry, index) => {
+                                const value = parseFloat(entry.state);
+                                if (isNaN(value)) return null;
+
+                                const x = (index / (historyData.length - 1)) * 100;
+                                const y = valueRange > 0 ? 100 - ((value - minValue) / valueRange) * 100 : 50;
+
+                                return <circle key={index} cx={x} cy={y} r="1" fill="rgb(59, 130, 246)" className="transition-all duration-1000" />;
+                              })}
+                            </>
+                          );
+                        })()}
+                      </svg>
+                    </div>
+
+                    {/* Data summary */}
+                    <div className="p-4 border-t border-gray-700/50">
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                          <div className="text-xs text-gray-400">Data Points</div>
+                          <div className="text-sm font-semibold text-white">{historyData.length}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-400">Current Value</div>
+                          <div className="text-sm font-semibold text-white">{historyData.length > 0 ? historyData[historyData.length - 1].state : "N/A"}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-400">Time Range</div>
+                          <div className="text-sm font-semibold text-white">24h</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Info Box */}
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                  <div className="text-sm text-blue-300">
+                    <div className="font-medium mb-2">📊 History Information</div>
+                    <div className="space-y-1 text-xs">
+                      <div>• Shows state changes for the last 24 hours</div>
+                      <div>• Data is fetched from Home Assistant's history API</div>
+                      <div>• Only entities with history tracking enabled will show data</div>
                     </div>
                   </div>
                 </div>

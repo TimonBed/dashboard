@@ -558,6 +558,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       }),
       ...(card.type === "weather" && { zipCode: card.zipCode }),
       ...(card.type === "link" && { url: card.url, subtitle: card.subtitle, icon: card.icon }),
+      ...(card.type === "time-remaining" && { remainingTimeEntityId: card.remainingTimeEntityId }),
     };
 
     const isDragging = draggingCard === card.id;

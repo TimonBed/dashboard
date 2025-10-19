@@ -95,6 +95,21 @@
                 "width": 2,
                 "height": 1
               }
+            },
+            {
+              "id": "card-1760888242426",
+              "type": "time-remaining",
+              "title": "Remaining Time",
+              "entityId": "sensor.p1p_01s00c330500093_print_progress",
+              "remainingTimeEntityId": "sensor.p1p_01s00c330500093_remaining_time",
+              "position": {
+                "x": 0,
+                "y": 9
+              },
+              "size": {
+                "width": 1,
+                "height": 1
+              }
             }
           ],
           "position": {
@@ -267,20 +282,6 @@
               "position": {
                 "x": 0,
                 "y": 8
-              },
-              "size": {
-                "width": 2,
-                "height": 1
-              }
-            },
-            {
-              "id": "print-status",
-              "type": "sensor-state",
-              "title": "Print Status",
-              "entityId": "sensor.print_status",
-              "position": {
-                "x": 0,
-                "y": 9
               },
               "size": {
                 "width": 2,
@@ -662,8 +663,8 @@
     }
   ],
   "layout": "grid",
-  "minColumns": 16,
+  "minColumns": 4,
   "minRows": 12,
   "createdAt": "2024-01-01T00:00:00Z",
-  "updatedAt": "2024-01-01T00:00:00Z"
+  "updatedAt": "2025-10-19T15:32:57.563Z"
 }
