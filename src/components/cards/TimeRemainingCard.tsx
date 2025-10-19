@@ -4,6 +4,51 @@ import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { CardComponentProps } from "../../types/cardProps";
 
+// Helper: Parse HH:MM:SS duration string
+const parseDuration = (durationStr: string): number | null => {
+  const parts = durationStr.split(":").map(Number);
+  if (parts.length === 3) {
+    const [hours, minutes, seconds] = parts;
+    return (hours * 3600 + minutes * 60 + seconds) * 1000;
+  }
+  return null;
+};
+
+// Helper: Format time from milliseconds
+const formatTime = (ms: number): string => {
+  const hours = Math.floor(ms / (1000 * 60 * 60));
+  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+};
+
+// Helper: Get color based on remaining time
+const getTimeColor = (ms: number): string => {
+  if (ms < 60000) return "text-red-400";
+  if (ms < 300000) return "text-orange-400";
+  if (ms < 1800000) return "text-yellow-400";
+  return "text-green-400";
+};
+
+// Helper: Get progress bar color class
+const getProgressColor = (percentage: number): string => {
+  if (percentage >= 100) return "bg-gradient-to-r from-green-500 to-green-400";
+  if (percentage >= 75) return "bg-gradient-to-r from-yellow-500 to-yellow-400";
+  if (percentage >= 50) return "bg-gradient-to-r from-orange-500 to-orange-400";
+  return "bg-gradient-to-r from-red-500 to-red-400";
+};
+
+// Helper: Get circle color
+const getCircleColor = (percentage: number): string => {
+  if (percentage >= 100) return "text-green-500";
+  if (percentage >= 75) return "text-yellow-500";
+  if (percentage >= 50) return "text-orange-500";
+  return "text-red-500";
+};
+
 interface TimeRemainingCardSpecificProps {
   title: string;
   width?: string;
@@ -32,14 +77,20 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
   const { entities } = useHomeAssistantStore();
   const currentTime = new Date();
 
-  // Get entities dynamically in render functions to handle late loading
-  const getHaEntity = () => (entityId ? entities.get(entityId) : undefined);
-  const getRemainingTimeEntity = () => (remainingTimeEntityId ? entities.get(remainingTimeEntityId) : undefined);
+  // Cache entity lookups to prevent repeated Map.get() calls
+  const haEntity = React.useMemo(() => (entityId ? entities.get(entityId) : undefined), [entityId, entities]);
+
+  const remainingTimeEntity = React.useMemo(() => (remainingTimeEntityId ? entities.get(remainingTimeEntityId) : undefined), [remainingTimeEntityId, entities]);
+
+  const unavailable = React.useMemo(() => {
+    if (haEntity?.state === "unavailable") return true;
+    if (remainingTimeEntity?.state === "unavailable") return true;
+    if (!haEntity && !remainingTimeEntity) return true;
+    return false;
+  }, [haEntity, remainingTimeEntity]);
 
   // Calculate remaining time
   const getRemainingTime = () => {
-    const remainingTimeEntity = getRemainingTimeEntity();
-
     // If we have a separate remaining time entity, use that
     if (remainingTimeEntity) {
       const state = remainingTimeEntity.state;
@@ -50,23 +101,9 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
         const minutes = Number(state);
         if (minutes <= 0) return { text: "Completed", color: "text-green-400" };
 
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
+        const timeText = minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
 
-        let timeText = "";
-        if (hours > 0) {
-          timeText = `${hours}h ${remainingMinutes}m`;
-        } else {
-          timeText = `${remainingMinutes}m`;
-        }
-
-        // Color based on remaining time
-        let color = "text-green-400";
-        if (minutes < 1) color = "text-red-400"; // Less than 1 minute
-        else if (minutes < 5) color = "text-orange-400"; // Less than 5 minutes
-        else if (minutes < 30) color = "text-yellow-400"; // Less than 30 minutes
-
-        return { text: timeText, color };
+        return { text: timeText, color: getTimeColor(minutes * 60 * 1000) };
       }
 
       // Check for different time-based attributes
@@ -80,11 +117,9 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
       else if (attributes.remaining_time) {
         const remaining = attributes.remaining_time;
         if (typeof remaining === "string") {
-          // Parse duration string like "00:15:30"
-          const parts = remaining.split(":").map(Number);
-          if (parts.length === 3) {
-            const [hours, minutes, seconds] = parts;
-            endTime = new Date(currentTime.getTime() + (hours * 3600 + minutes * 60 + seconds) * 1000);
+          const durationMs = parseDuration(remaining);
+          if (durationMs) {
+            endTime = new Date(currentTime.getTime() + durationMs);
           }
         }
       }
@@ -92,10 +127,9 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
       else if (attributes.duration) {
         const duration = attributes.duration;
         if (typeof duration === "string") {
-          const parts = duration.split(":").map(Number);
-          if (parts.length === 3) {
-            const [hours, minutes, seconds] = parts;
-            endTime = new Date(currentTime.getTime() + (hours * 3600 + minutes * 60 + seconds) * 1000);
+          const durationMs = parseDuration(duration);
+          if (durationMs) {
+            endTime = new Date(currentTime.getTime() + durationMs);
           }
         }
       }
@@ -111,30 +145,9 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
 
         if (remaining <= 0) return { text: "Completed", color: "text-green-400" };
 
-        const hours = Math.floor(remaining / (1000 * 60 * 60));
-        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-
-        let timeText = "";
-        if (hours > 0) {
-          timeText = `${hours}h ${minutes}m`;
-        } else if (minutes > 0) {
-          timeText = `${minutes}m ${seconds}s`;
-        } else {
-          timeText = `${seconds}s`;
-        }
-
-        // Color based on remaining time
-        let color = "text-green-400";
-        if (remaining < 60000) color = "text-red-400"; // Less than 1 minute
-        else if (remaining < 300000) color = "text-orange-400"; // Less than 5 minutes
-        else if (remaining < 1800000) color = "text-yellow-400"; // Less than 30 minutes
-
-        return { text: timeText, color };
+        return { text: formatTime(remaining), color: getTimeColor(remaining) };
       }
     }
-
-    const haEntity = getHaEntity();
 
     if (!haEntity) {
       // Example time for debugging - 5 minutes from now
@@ -143,26 +156,7 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
 
       if (remaining <= 0) return { text: "Completed", color: "text-green-400" };
 
-      const hours = Math.floor(remaining / (1000 * 60 * 60));
-      const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-
-      let timeText = "";
-      if (hours > 0) {
-        timeText = `${hours}h ${minutes}m`;
-      } else if (minutes > 0) {
-        timeText = `${minutes}m ${seconds}s`;
-      } else {
-        timeText = `${seconds}s`;
-      }
-
-      // Color based on remaining time
-      let color = "text-green-400";
-      if (remaining < 60000) color = "text-red-400"; // Less than 1 minute
-      else if (remaining < 300000) color = "text-orange-400"; // Less than 5 minutes
-      else if (remaining < 1800000) color = "text-yellow-400"; // Less than 30 minutes
-
-      return { text: timeText, color };
+      return { text: formatTime(remaining), color: getTimeColor(remaining) };
     }
 
     const state = haEntity.state;
@@ -179,11 +173,9 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
     else if (attributes.remaining_time) {
       const remaining = attributes.remaining_time;
       if (typeof remaining === "string") {
-        // Parse duration string like "00:15:30"
-        const parts = remaining.split(":").map(Number);
-        if (parts.length === 3) {
-          const [hours, minutes, seconds] = parts;
-          endTime = new Date(currentTime.getTime() + (hours * 3600 + minutes * 60 + seconds) * 1000);
+        const durationMs = parseDuration(remaining);
+        if (durationMs) {
+          endTime = new Date(currentTime.getTime() + durationMs);
         }
       }
     }
@@ -191,10 +183,9 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
     else if (attributes.duration) {
       const duration = attributes.duration;
       if (typeof duration === "string") {
-        const parts = duration.split(":").map(Number);
-        if (parts.length === 3) {
-          const [hours, minutes, seconds] = parts;
-          endTime = new Date(currentTime.getTime() + (hours * 3600 + minutes * 60 + seconds) * 1000);
+        const durationMs = parseDuration(duration);
+        if (durationMs) {
+          endTime = new Date(currentTime.getTime() + durationMs);
         }
       }
     }
@@ -211,41 +202,17 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
 
     if (remaining <= 0) return { text: "Completed", color: "text-green-400" };
 
-    const hours = Math.floor(remaining / (1000 * 60 * 60));
-    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-
-    let timeText = "";
-    if (hours > 0) {
-      timeText = `${hours}h ${minutes}m`;
-    } else if (minutes > 0) {
-      timeText = `${minutes}m ${seconds}s`;
-    } else {
-      timeText = `${seconds}s`;
-    }
-
-    // Color based on remaining time
-    let color = "text-green-400";
-    if (remaining < 60000) color = "text-red-400"; // Less than 1 minute
-    else if (remaining < 300000) color = "text-orange-400"; // Less than 5 minutes
-    else if (remaining < 1800000) color = "text-yellow-400"; // Less than 30 minutes
-
-    return { text: timeText, color };
+    return { text: formatTime(remaining), color: getTimeColor(remaining) };
   };
 
   const remaining = getRemainingTime();
 
   // Get sensor state for title - always use remainingTimeEntityId if provided
   const getSensorState = () => {
-    const remainingTimeEntity = getRemainingTimeEntity();
-
-    console.log("TimeRemainingCard: getSensorState - remainingTimeEntity:", remainingTimeEntity, "remainingTimeEntityId:", remainingTimeEntityId);
-
     // Always use remainingTimeEntity if remainingTimeEntityId is provided
     if (remainingTimeEntityId) {
       if (remainingTimeEntity) {
         const state = remainingTimeEntity.state;
-        console.log("TimeRemainingCard: getSensorState - remainingTimeEntity state:", state);
         if (state && !isNaN(Number(state))) {
           return `${state}m`;
         }
@@ -255,9 +222,7 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
     }
 
     // Only use haEntity if no remainingTimeEntityId provided
-    const haEntity = getHaEntity();
     if (haEntity) {
-      console.log("TimeRemainingCard: getSensorState - using haEntity state:", haEntity.state);
       return haEntity.state || "Unknown";
     }
 
@@ -266,22 +231,16 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
 
   // Get remaining time in minutes from the separate entity
   const getRemainingMinutes = () => {
-    const remainingTimeEntity = getRemainingTimeEntity();
-
     if (!remainingTimeEntity) {
-      console.log("TimeRemainingCard: No remainingTimeEntity found");
       return null;
     }
 
     const state = remainingTimeEntity.state;
     const attributes = remainingTimeEntity.attributes || {};
 
-    console.log("TimeRemainingCard: remainingTimeEntity state:", state, "attributes:", attributes);
-
     // Check if state is minutes remaining
     if (state && !isNaN(Number(state))) {
       const minutes = Number(state);
-      console.log("TimeRemainingCard: Found numeric state, minutes:", minutes);
       return minutes; // Return the actual value, even if 0
     }
 
@@ -289,24 +248,18 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
     if (attributes.remaining_time) {
       const remaining = attributes.remaining_time;
       if (typeof remaining === "string") {
-        const parts = remaining.split(":").map(Number);
-        if (parts.length === 3) {
-          const [hours, minutes, seconds] = parts;
-          const totalMinutes = hours * 60 + minutes + Math.round(seconds / 60);
-          console.log("TimeRemainingCard: Found remaining_time attribute, total minutes:", totalMinutes);
-          return totalMinutes;
+        const durationMs = parseDuration(remaining);
+        if (durationMs) {
+          return Math.round(durationMs / (1000 * 60));
         }
       }
     }
 
-    console.log("TimeRemainingCard: No valid remaining time data found");
     return null;
   };
 
   // Calculate progress percentage for the progress bar
   const getProgressPercentage = () => {
-    const haEntity = getHaEntity();
-
     if (!haEntity) {
       // For debug example, calculate progress from 5 minutes
       const totalTime = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -345,10 +298,9 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
     if (attributes.duration) {
       const duration = attributes.duration;
       if (typeof duration === "string") {
-        const parts = duration.split(":").map(Number);
-        if (parts.length === 3) {
-          const [hours, minutes, seconds] = parts;
-          totalDuration = (hours * 3600 + minutes * 60 + seconds) * 1000;
+        const durationMs = parseDuration(duration);
+        if (durationMs) {
+          totalDuration = durationMs;
         }
       }
     }
@@ -396,25 +348,10 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
 
   const progressPercentage = getProgressPercentage();
 
-  // Check if entity is unavailable
-  const isUnavailable = () => {
-    const haEntity = getHaEntity();
-    const remainingTimeEntity = getRemainingTimeEntity();
-
-    // Check if either entity is unavailable
-    if (haEntity && haEntity.state === "unavailable") return true;
-    if (remainingTimeEntity && remainingTimeEntity.state === "unavailable") return true;
-
-    // If no entities are loaded, consider unavailable
-    if (!haEntity && !remainingTimeEntity) return true;
-
-    return false;
-  };
-
   // Always show remaining minutes in subtitle
   const getSubtitleText = () => {
     // Check if unavailable first - show nothing
-    if (isUnavailable()) {
+    if (unavailable) {
       return "";
     }
 
@@ -471,7 +408,7 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
                    a 15.9155 15.9155 0 0 1 0 -31.831"
               />
               {/* Progress circle */}
-              {isUnavailable() ? (
+              {unavailable ? (
                 /* Unavailable state - show a dotted circle */
                 <path
                   className="text-gray-500"
@@ -485,15 +422,7 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
                 />
               ) : (
                 <path
-                  className={`transition-all duration-1000 ${
-                    progressPercentage >= 100
-                      ? "text-green-500"
-                      : progressPercentage >= 75
-                      ? "text-yellow-500"
-                      : progressPercentage >= 50
-                      ? "text-orange-500"
-                      : "text-red-500"
-                  }`}
+                  className={`transition-all duration-1000 ${getCircleColor(progressPercentage)}`}
                   stroke="currentColor"
                   strokeWidth="3"
                   strokeLinecap="round"
@@ -507,13 +436,13 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
             </svg>
             {/* Percentage text in center */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs font-bold text-white drop-shadow-md">{isUnavailable() ? "N/A" : `${Math.round(progressPercentage)}%`}</span>
+              <span className="text-xs font-bold text-white drop-shadow-md">{unavailable ? "N/A" : `${Math.round(progressPercentage)}%`}</span>
             </div>
           </div>
 
           {/* Time remaining text */}
           <div className="text-right min-w-0">
-            <div className="text-sm font-medium text-white drop-shadow-md truncate">{isUnavailable() ? "" : remaining?.text || "Loading..."}</div>
+            <div className="text-sm font-medium text-white drop-shadow-md truncate">{unavailable ? "" : remaining?.text || "Loading..."}</div>
             {showIcon && (
               <div className="flex items-center justify-end mt-1">
                 <Timer className="w-3 h-3 text-white/60 drop-shadow-sm" />
@@ -524,26 +453,16 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
       </div>
 
       {/* Bottom progress indicator line */}
-      {!isUnavailable() && (
+      {!unavailable && (
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700/30">
           {progressPercentage > 0 ? (
-            <div
-              className={`h-full transition-all duration-1000 ${
-                progressPercentage >= 100
-                  ? "bg-gradient-to-r from-green-500 to-green-400"
-                  : progressPercentage >= 75
-                  ? "bg-gradient-to-r from-yellow-500 to-yellow-400"
-                  : progressPercentage >= 50
-                  ? "bg-gradient-to-r from-orange-500 to-orange-400"
-                  : "bg-gradient-to-r from-red-500 to-red-400"
-              }`}
-              style={{ width: `${progressPercentage}%` }}
-            />
+            <div className={`h-full transition-all duration-1000 ${getProgressColor(progressPercentage)}`} style={{ width: `${progressPercentage}%` }} />
           ) : (
             <div className="h-full bg-gradient-to-r from-gray-500/40 to-gray-400/40 animate-pulse" />
           )}
         </div>
       )}
+
       {/* Enhanced circular progress with better styling */}
       <div className="absolute top-1 right-1 bottom-1 w-14">
         <div className="relative w-full h-full flex items-center justify-center">
@@ -555,11 +474,12 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
                   a 15.9155 15.9155 0 0 1 0 31.831
                   a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
+                stroke={progressPercentage === 0 ? "rgba(75, 85, 99, 0.2)" : "rgba(75, 85, 99, 0.4)"}
                 strokeWidth="3"
                 className="drop-shadow-sm"
               />
               {/* Progress circle with enhanced styling */}
-              {isUnavailable() ? (
+              {unavailable ? (
                 /* Unavailable state - show a dotted rounded circle */
                 <path
                   d="M18 2.0845
@@ -619,34 +539,11 @@ export const TimeRemainingCard: React.FC<TimeRemainingCardProps> = ({
             </svg>
             {/* Enhanced center percentage text */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs font-bold text-white drop-shadow-md">{isUnavailable() ? "N/A" : `${Math.round(progressPercentage)}%`}</span>
+              <span className="text-xs font-bold text-white drop-shadow-md">{unavailable ? "N/A" : `${Math.round(progressPercentage)}%`}</span>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Subtle progress indicator line at bottom */}
-      {!isUnavailable() && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-700/30">
-          {progressPercentage > 0 ? (
-            <div
-              className={`h-full transition-all duration-1000 ${
-                progressPercentage >= 100
-                  ? "bg-gradient-to-r from-green-500 to-green-400"
-                  : progressPercentage >= 75
-                  ? "bg-gradient-to-r from-yellow-500 to-yellow-400"
-                  : progressPercentage >= 50
-                  ? "bg-gradient-to-r from-orange-500 to-orange-400"
-                  : "bg-gradient-to-r from-red-500 to-red-400"
-              }`}
-              style={{ width: `${progressPercentage}%` }}
-            />
-          ) : (
-            /* 0% state - show a subtle pulsing indicator */
-            <div className="h-full bg-gradient-to-r from-gray-500/40 to-gray-400/40 animate-pulse" />
-          )}
-        </div>
-      )}
     </Card>
   );
 };
