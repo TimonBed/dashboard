@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { Lightbulb, LightbulbOff, Sun, Moon } from "lucide-react";
+import { LightbulbOff, Sun, Moon } from "lucide-react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { useHomeAssistant } from "../../hooks/useHomeAssistant";
@@ -33,7 +33,6 @@ export const LightSwitchCard: React.FC<LightSwitchCardProps> = ({
   const { callService } = useHomeAssistant();
   const [isAnimating, setIsAnimating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStartX, setDragStartX] = useState(0);
   const [initialBrightness, setInitialBrightness] = useState(0);
   const [currentDragBrightness, setCurrentDragBrightness] = useState(brightness);
   const [disableSync, setDisableSync] = useState(false);
@@ -89,7 +88,7 @@ export const LightSwitchCard: React.FC<LightSwitchCardProps> = ({
     [entityId, callService]
   );
 
-  // Handle drag start
+  // Handle drag start (mouse)
   const handleDragStart = useCallback(
     (e: React.MouseEvent) => {
       if (disabled || !hasBrightnessControl) return; // Disable dragging when no brightness control
@@ -97,15 +96,6 @@ export const LightSwitchCard: React.FC<LightSwitchCardProps> = ({
       e.preventDefault();
       setIsDragging(true);
 
-      // Get the card's bounding rectangle
-      const cardRect = cardRef.current?.getBoundingClientRect();
-      if (!cardRect) return;
-
-      // Calculate the initial position relative to the card
-      const relativeX = e.clientX - cardRect.left;
-      const initialBrightnessFromPosition = Math.max(0, Math.min(100, (relativeX / cardRect.width) * 100));
-
-      setDragStartX(e.clientX);
       setInitialBrightness(realTimeBrightness);
       // Start with current real-time brightness, not mouse position
       setCurrentDragBrightness(realTimeBrightness);
@@ -113,7 +103,26 @@ export const LightSwitchCard: React.FC<LightSwitchCardProps> = ({
     [disabled, hasBrightnessControl, realTimeBrightness]
   );
 
-  // Handle drag move
+  // Handle touch start (mobile)
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (disabled || !hasBrightnessControl) return;
+
+      // Prevent default to stop page scrolling
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      setIsDragging(true);
+
+      setInitialBrightness(realTimeBrightness);
+      setCurrentDragBrightness(realTimeBrightness);
+    },
+    [disabled, hasBrightnessControl, realTimeBrightness]
+  );
+
+  // Handle drag move (mouse)
   const handleDragMove = useCallback(
     (e: MouseEvent) => {
       if (!isDragging || !cardRef.current) return;
@@ -131,7 +140,31 @@ export const LightSwitchCard: React.FC<LightSwitchCardProps> = ({
     [isDragging]
   );
 
-  // Handle drag end
+  // Handle touch move (mobile)
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!isDragging || !cardRef.current) return;
+
+      // Prevent scrolling while dragging
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      // Get the card's bounding rectangle
+      const cardRect = cardRef.current.getBoundingClientRect();
+
+      // Calculate the position relative to the card
+      const relativeX = touch.clientX - cardRect.left;
+      const newBrightness = Math.max(0, Math.min(100, (relativeX / cardRect.width) * 100));
+
+      // Store the calculated brightness but don't apply it yet
+      setCurrentDragBrightness(newBrightness);
+    },
+    [isDragging]
+  );
+
+  // Handle drag end (mouse and touch)
   const handleDragEnd = useCallback(() => {
     if (isDragging) {
       if (currentDragBrightness !== initialBrightness) {
@@ -151,18 +184,24 @@ export const LightSwitchCard: React.FC<LightSwitchCardProps> = ({
     }
   }, [isDragging, currentDragBrightness, initialBrightness, handleBrightnessChange]);
 
-  // Add event listeners for drag
+  // Add event listeners for drag (mouse and touch)
   React.useEffect(() => {
     if (isDragging) {
       document.addEventListener("mousemove", handleDragMove);
       document.addEventListener("mouseup", handleDragEnd);
+      document.addEventListener("touchmove", handleTouchMove, { passive: false });
+      document.addEventListener("touchend", handleDragEnd);
+      document.addEventListener("touchcancel", handleDragEnd);
 
       return () => {
         document.removeEventListener("mousemove", handleDragMove);
         document.removeEventListener("mouseup", handleDragEnd);
+        document.removeEventListener("touchmove", handleTouchMove);
+        document.removeEventListener("touchend", handleDragEnd);
+        document.removeEventListener("touchcancel", handleDragEnd);
       };
     }
-  }, [isDragging, handleDragMove, handleDragEnd]);
+  }, [isDragging, handleDragMove, handleTouchMove, handleDragEnd]);
 
   // Handle light toggle with animation
   const handleToggle = async () => {
@@ -258,6 +297,7 @@ export const LightSwitchCard: React.FC<LightSwitchCardProps> = ({
       height="h-16"
       ref={cardRef}
       onMouseDown={handleDragStart}
+      onTouchStart={handleTouchStart}
     >
       {/* Click animation overlay */}
       {isAnimating && (

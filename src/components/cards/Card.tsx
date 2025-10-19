@@ -17,6 +17,7 @@ interface CardProps {
   width?: string;
   height?: string;
   onMouseDown?: (e: React.MouseEvent) => void;
+  onTouchStart?: (e: React.TouchEvent) => void;
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
@@ -36,6 +37,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       width = "w-80",
       height = "h-16",
       onMouseDown,
+      onTouchStart,
     },
     ref
   ) => {
@@ -65,11 +67,12 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       <>
         <div
           ref={ref}
-          className={`bg-[#1D1D1D] backdrop-blur-xl w-full rounded-2xl shadow-2xl transition-all duration-500 group relative overflow-hidden ${
+          className={`bg-[#1D1D1D] backdrop-blur-xl w-full rounded-2xl shadow-2xl transition-all duration-500 group relative overflow-hidden touch-none ${
             onClick ? "cursor-pointer" : ""
           } ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${width} ${height}  p-3`}
           onClick={disabled ? undefined : onClick}
           onMouseDown={disabled ? undefined : onMouseDown}
+          onTouchStart={disabled ? undefined : onTouchStart}
           onContextMenu={handleRightClick}
         >
           {/* Header */}
