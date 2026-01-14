@@ -26,6 +26,8 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [historyData, setHistoryData] = useState<Array<{ time: string; state: string; attributes: any }>>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [plantTab, setPlantTab] = useState(0);
+  const [plantsDraft, setPlantsDraft] = useState<any[]>([]);
 
   const { entities } = useHomeAssistantStore();
 
@@ -90,6 +92,26 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
     setJsonError("");
     setActiveTab("basic");
     setShowDeleteConfirm(false);
+    setPlantTab(0);
+
+    if (cardConfig?.type === "plant-sensor") {
+      const existing = Array.isArray(cardConfig?.plants) ? cardConfig.plants : [];
+      const normalized = Array.from({ length: 3 }).map((_, i) => {
+        const p = existing[i] || {};
+        return {
+          id: p.id || `plant-${i + 1}`,
+          name: p.name || `Plant ${i + 1}`,
+          batteryEntity: p.batteryEntity || "",
+          humidityEntity: p.humidityEntity || "",
+          moistureEntity: p.moistureEntity || "",
+          temperatureEntity: p.temperatureEntity || "",
+          image: p.image || "",
+        };
+      });
+      setPlantsDraft(normalized);
+    } else {
+      setPlantsDraft([]);
+    }
   }, [title, entityId, cardConfig, isOpen]);
 
   // Fetch history when history tab is opened
@@ -100,8 +122,36 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
   }, [activeTab, editedEntityId]);
 
   const handleSave = () => {
+    // For plant cards, persist per-plant entity configuration via JSON save,
+    // while still updating the title via the regular save callback.
+    if (cardConfig?.type === "plant-sensor") {
+      const updatedConfig = {
+        ...(cardConfig || {}),
+        title: editedTitle,
+        entityId: editedEntityId || undefined,
+        plants: plantsDraft.map((p, i) => ({
+          id: p.id || `plant-${i + 1}`,
+          name: p.name || `Plant ${i + 1}`,
+          batteryEntity: p.batteryEntity || undefined,
+          humidityEntity: p.humidityEntity || undefined,
+          moistureEntity: p.moistureEntity || undefined,
+          temperatureEntity: p.temperatureEntity || undefined,
+          image: p.image || undefined,
+        })),
+      };
+      onSaveJson?.(updatedConfig);
+    }
+
     onSave(editedTitle, editedEntityId);
     onClose();
+  };
+
+  const updatePlantField = (index: number, field: string, value: string) => {
+    setPlantsDraft((prev) => {
+      const next = [...prev];
+      next[index] = { ...(next[index] || {}), [field]: value };
+      return next;
+    });
   };
 
   const handleDelete = () => {
@@ -282,6 +332,109 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
                   autoFocus
                 />
               </div>
+
+              {/* Plant Sensor Settings */}
+              {cardConfig?.type === "plant-sensor" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-white">Plants</h3>
+                    <div className="text-xs text-gray-400">Edit names + entities per plant</div>
+                  </div>
+
+                  {/* Plant Tabs */}
+                  <div className="flex gap-2">
+                    {plantsDraft.map((p, idx) => (
+                      <button
+                        key={p.id || idx}
+                        type="button"
+                        onClick={() => setPlantTab(idx)}
+                        className={`px-3 py-2 rounded-xl border transition-colors text-sm ${
+                          plantTab === idx
+                            ? "bg-blue-500/10 border-blue-500/40 text-blue-300"
+                            : "bg-gray-800/30 border-gray-700/50 text-gray-300 hover:bg-white/5"
+                        }`}
+                        title={p.name}
+                      >
+                        {p.name || `Plant ${idx + 1}`}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Plant Editor */}
+                  {plantsDraft[plantTab] && (
+                    <div className="bg-gray-800/30 border border-gray-700/50 rounded-2xl p-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Plant Name</label>
+                          <input
+                            type="text"
+                            value={plantsDraft[plantTab].name}
+                            onChange={(e) => updatePlantField(plantTab, "name", e.target.value)}
+                            className="w-full px-4 py-3 bg-gray-900/40 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                            placeholder="Monstera"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Battery Entity</label>
+                          <input
+                            type="text"
+                            value={plantsDraft[plantTab].batteryEntity}
+                            onChange={(e) => updatePlantField(plantTab, "batteryEntity", e.target.value)}
+                            className="w-full px-4 py-3 bg-gray-900/40 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                            placeholder="sensor.blumen_giessen_1_battery"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Humidity Entity</label>
+                          <input
+                            type="text"
+                            value={plantsDraft[plantTab].humidityEntity}
+                            onChange={(e) => updatePlantField(plantTab, "humidityEntity", e.target.value)}
+                            className="w-full px-4 py-3 bg-gray-900/40 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                            placeholder="sensor.blumen_giessen_1_humidity"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Soil Moisture Entity</label>
+                          <input
+                            type="text"
+                            value={plantsDraft[plantTab].moistureEntity}
+                            onChange={(e) => updatePlantField(plantTab, "moistureEntity", e.target.value)}
+                            className="w-full px-4 py-3 bg-gray-900/40 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                            placeholder="sensor.blumen_giessen_1_soil_moisture"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Temperature Entity</label>
+                          <input
+                            type="text"
+                            value={plantsDraft[plantTab].temperatureEntity}
+                            onChange={(e) => updatePlantField(plantTab, "temperatureEntity", e.target.value)}
+                            className="w-full px-4 py-3 bg-gray-900/40 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                            placeholder="sensor.blumen_giessen_1_temperature"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Image URL (optional)</label>
+                          <input
+                            type="text"
+                            value={plantsDraft[plantTab].image}
+                            onChange={(e) => updatePlantField(plantTab, "image", e.target.value)}
+                            className="w-full px-4 py-3 bg-gray-900/40 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                            placeholder="https://..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Entity Selection */}
               <div>

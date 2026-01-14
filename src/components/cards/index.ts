@@ -13,5 +13,6 @@ export { RoomHeaderCard } from "./RoomHeaderCard";
 export { CalendarCard } from "./CalendarCard";
 export { WeatherCard } from "./WeatherCard";
 export { LinkCard } from "./LinkCard";
+export { PlantSensorCard } from "./PlantSensorCard";
 export { Card } from "./Card";
 export { CardSettings } from "./CardSettings";

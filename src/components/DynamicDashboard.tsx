@@ -18,6 +18,7 @@ import { RoomHeaderCard } from "./cards/RoomHeaderCard";
 import { CalendarCard } from "./cards/CalendarCard";
 import { WeatherCard } from "./cards/WeatherCard";
 import { LinkCard } from "./cards/LinkCard";
+import { PlantSensorCard } from "./cards/PlantSensorCard";
 import { dashboardService } from "../services/dashboardService";
 
 interface DynamicDashboardProps {
@@ -238,6 +239,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
     { value: "calendar", label: "Calendar" },
     { value: "weather", label: "Weather" },
     { value: "link", label: "Link" },
+    { value: "plant-sensor", label: "Plant Sensor" },
   ];
 
   const handleAddCard = async () => {
@@ -541,6 +543,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       calendar: CalendarCard,
       weather: WeatherCard,
       link: LinkCard,
+      "plant-sensor": PlantSensorCard,
     };
 
     const CardComponent = cardComponents[card.type];
@@ -567,6 +570,14 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       ...(card.type === "weather" && { zipCode: card.zipCode }),
       ...(card.type === "link" && { url: card.url, subtitle: card.subtitle, icon: card.icon }),
       ...(card.type === "time-remaining" && { remainingTimeEntityId: card.remainingTimeEntityId }),
+      ...(card.type === "plant-sensor" && {
+        plants: card.plants,
+        batteryEntity: card.batteryEntity,
+        humidityEntity: card.humidityEntity,
+        moistureEntity: card.moistureEntity,
+        temperatureEntity: card.temperatureEntity,
+        image: card.image,
+      }),
     };
 
     const isDragging = draggingCard === card.id;

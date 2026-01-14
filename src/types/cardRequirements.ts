@@ -212,6 +212,19 @@ export const CARD_REQUIREMENTS: Record<string, CardTypeRequirements> = {
     label: "Room Header",
     requiredFields: [],
   },
+  "plant-sensor": {
+    type: "plant-sensor",
+    label: "Plant Sensor",
+    requiredFields: [
+      {
+        name: "plants",
+        type: "array",
+        label: "Plants",
+        placeholder: '[{"name": "Plant 1", "moistureEntity": "..."}]',
+        description: "Array of plant configurations",
+      },
+    ],
+  },
 };
 
 /**

@@ -48,7 +48,10 @@ export interface DashboardCard {
     | "helios-ventilation"
     | "bus-departure"
     | "room-header"
-    | "calendar";
+    | "calendar"
+    | "weather"
+    | "link"
+    | "plant-sensor";
   title: string;
   entityId?: string;
   icon?: string;
@@ -74,6 +77,32 @@ export interface DashboardCard {
     buttonStateEntity?: string;
   };
   maxDepartures?: number;
+
+  // Plant Sensor specific fields
+  plants?: Array<{
+    id: string; // or name
+    name: string;
+    batteryEntity?: string;
+    humidityEntity?: string;
+    moistureEntity?: string;
+    temperatureEntity?: string;
+    image?: string;
+  }>;
+  batteryEntity?: string;
+  humidityEntity?: string;
+  moistureEntity?: string;
+  temperatureEntity?: string;
+  image?: string;
+
+  // Weather specific fields
+  zipCode?: string;
+
+  // Link specific fields
+  url?: string;
+  subtitle?: string;
+
+  // Time Remaining specific fields
+  remainingTimeEntityId?: string;
 }
 
 export interface Dashboard {
