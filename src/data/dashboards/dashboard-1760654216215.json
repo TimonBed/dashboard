@@ -278,6 +278,34 @@
             "width": 8,
             "height": 2
           }
+        },
+        {
+          "id": "section-1768427610737",
+          "type": "room-section",
+          "cards": [
+            {
+              "id": "card-1768427610737",
+              "type": "plant-sensor",
+              "title": "wefwf",
+              "position": {
+                "x": 1,
+                "y": 8
+              },
+              "size": {
+                "width": 2,
+                "height": 2
+              },
+              "plants": "fwfeefwf"
+            }
+          ],
+          "position": {
+            "x": 0,
+            "y": 10
+          },
+          "size": {
+            "width": 5,
+            "height": 2
+          }
         }
       ]
     }

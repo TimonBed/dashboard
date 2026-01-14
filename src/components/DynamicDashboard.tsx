@@ -19,6 +19,7 @@ import { CalendarCard } from "./cards/CalendarCard";
 import { WeatherCard } from "./cards/WeatherCard";
 import { LinkCard } from "./cards/LinkCard";
 import { PlantSensorCard } from "./cards/PlantSensorCard";
+import { Card, CardErrorBoundary } from "./cards/Card";
 import { dashboardService } from "../services/dashboardService";
 
 interface DynamicDashboardProps {
@@ -594,7 +595,28 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
         }}
         onMouseDown={isEditMode ? (e) => handleDragStart(card.id, e) : undefined}
       >
-        <CardComponent {...commonProps} {...extraProps} />
+        <CardErrorBoundary
+          fallback={
+            <Card
+              title={card.title || "Card"}
+              subtitle="Render error"
+              icon={<AlertCircle className="w-5 h-5 text-red-400" />}
+              entityId={card.entityId}
+              onTitleChange={commonProps.onTitleChange}
+              onJsonSave={commonProps.onJsonSave}
+              onCardDelete={commonProps.onCardDelete}
+              cardConfig={card}
+              height="h-full"
+            >
+              <div className="flex items-center justify-between h-full">
+                <div className="text-red-400 text-sm font-semibold">This card failed to render</div>
+                <div className="text-xs text-gray-400 opacity-80">Right click → JSON</div>
+              </div>
+            </Card>
+          }
+        >
+          <CardComponent {...commonProps} {...extraProps} />
+        </CardErrorBoundary>
 
         {/* Resize Handle (only in edit mode) */}
         {isEditMode && (
