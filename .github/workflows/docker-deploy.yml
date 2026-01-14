@@ -62,10 +62,30 @@ jobs:
       #   run: |
       #     curl -X POST '${{ secrets.PORTAINER_WEBHOOK_URL }}'
 
+      - name: Redeploy via Portainer (API key)
+        if: success()
+        env:
+          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
+          PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
+          PORTAINER_ENDPOINT_ID: ${{ secrets.PORTAINER_ENDPOINT_ID }}
+          PORTAINER_CONTAINER_NAME: ha-dashboard
+        run: |
+          set -euo pipefail
+
+          containers="$(curl -fsSL -H "X-API-Key: ${PORTAINER_API_KEY}" \
+            "${PORTAINER_URL%/}/api/docker/${PORTAINER_ENDPOINT_ID}/containers/json?all=1")"
+
+          id="$(python3 -c 'import json,os,sys; name=os.environ["PORTAINER_CONTAINER_NAME"]; data=json.loads(sys.stdin.read()); target="/"+name; print(next((c.get("Id","") for c in data if target in (c.get("Names") or [])), ""))' <<<"$containers")"
+
+          [ -n "$id" ] || (echo "Container not found: ${PORTAINER_CONTAINER_NAME}" && exit 1)
+
+          curl -fsS -X POST -H "X-API-Key: ${PORTAINER_API_KEY}" -H "Content-Type: application/json" \
+            -d '{"PullImage": true}' \
+            "${PORTAINER_URL%/}/api/docker/${PORTAINER_ENDPOINT_ID}/containers/${id}/recreate"
+
       - name: Deployment Status
         if: success()
         run: |
           echo "✅ Successfully built and pushed Docker image"
-          echo "✅ Portainer webhook triggered"
-          echo "🚀 Deployment initiated"
+          echo "🚀 Redeploy triggered via Portainer API (ha-dashboard)"
 
