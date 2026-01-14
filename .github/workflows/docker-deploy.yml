@@ -74,7 +74,7 @@ jobs:
           set -euo pipefail
 
           containers="$(curl -fsSL -H "X-API-Key: ${PORTAINER_API_KEY}" \
-            "${PORTAINER_URL%/}/api/docker/${PORTAINER_ENDPOINT_ID}/containers/json?all=1")"
+            "${PORTAINER_URL%/}/api/endpoints/${PORTAINER_ENDPOINT_ID}/docker/containers/json?all=1")"
 
           id="$(python3 -c 'import json,os,sys; name=os.environ["PORTAINER_CONTAINER_NAME"]; data=json.loads(sys.stdin.read()); target="/"+name; print(next((c.get("Id","") for c in data if target in (c.get("Names") or [])), ""))' <<<"$containers")"
 
@@ -82,7 +82,7 @@ jobs:
 
           curl -fsS -X POST -H "X-API-Key: ${PORTAINER_API_KEY}" -H "Content-Type: application/json" \
             -d '{"PullImage": true}' \
-            "${PORTAINER_URL%/}/api/docker/${PORTAINER_ENDPOINT_ID}/containers/${id}/recreate"
+            "${PORTAINER_URL%/}/api/endpoints/${PORTAINER_ENDPOINT_ID}/docker/containers/${id}/recreate"
 
       - name: Deployment Status
         if: success()
