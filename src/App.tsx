@@ -11,8 +11,12 @@ import { Notification } from "./components/Notification";
 import MainDashboard from "./components/MainDashboard";
 import { dashboardService } from "./services/dashboardService";
 import { Dashboard } from "./types/dashboard";
+import { useHomeAssistant } from "./hooks/useHomeAssistant";
 
 function App() {
+  // Keep HA connection alive for all routes (including direct loads like /annapc)
+  useHomeAssistant();
+
   const location = useLocation();
   const activeTab = location.pathname;
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);

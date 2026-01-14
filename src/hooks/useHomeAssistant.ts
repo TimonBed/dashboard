@@ -17,7 +17,7 @@ export const useHomeAssistant = () => {
   const retryDelay = 2000; // 2 seconds
   const { setEntities, updateEntity, setConnected, setLoading, setError, setConnectionType, setWebSocketError, isConnected, isLoading, error } =
     useHomeAssistantStore();
-  const { homeAssistantIP, homeAssistantToken, getHomeAssistantURL } = useSettingsStore();
+  const { homeAssistantIP, homeAssistantToken } = useSettingsStore();
 
   // Build WebSocket URL from settings
   const getWebSocketURL = () => {
@@ -154,11 +154,11 @@ export const useHomeAssistant = () => {
     connect();
 
     return () => {
-      if (wsRef.current) {
-        wsRef.current.disconnect();
-        wsRef.current = null;
-        hasConnectedRef.current = false;
-      }
+      // Intentionally keep the global WebSocket alive across route changes.
+      // Many components call this hook (e.g. cards for callService). If we disconnect
+      // on unmount, navigating between pages tears down the shared connection and
+      // causes dashboards to render without entities until another page triggers a reconnect.
+      wsRef.current = null;
     };
   }, [homeAssistantIP, homeAssistantToken]);
 

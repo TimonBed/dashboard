@@ -284,18 +284,46 @@
           "type": "room-section",
           "cards": [
             {
-              "id": "card-1768427610737",
+              "id": "plant-sensors-group",
               "type": "plant-sensor",
-              "title": "wefwf",
+              "title": "Pflanzen",
+              "plants": [
+                {
+                  "id": "plant-1",
+                  "name": "Punktblume",
+                  "batteryEntity": "sensor.blumen_giessen_1_battery",
+                  "humidityEntity": "sensor.blumen_giessen_1_humidity",
+                  "moistureEntity": "sensor.blumen_giessen_1_soil_moisture",
+                  "temperatureEntity": "sensor.blumen_giessen_1_temperature",
+                  "image": "https://images.unsplash.com/photo-1614594975525-e45890e2e122?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                },
+                {
+                  "id": "plant-2",
+                  "name": "Drachenbaum",
+                  "batteryEntity": "sensor.blumen_giessen_2_battery",
+                  "humidityEntity": "sensor.blumen_giessen_2_humidity",
+                  "moistureEntity": "sensor.blumen_giessen_2_soil_moisture",
+                  "temperatureEntity": "sensor.blumen_giessen_2_temperature",
+                  "image": "https://images.unsplash.com/photo-1596527267882-72c6e0966526?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                },
+                {
+                  "id": "plant-3",
+                  "name": "Kentiapalme",
+                  "batteryEntity": "sensor.blumen_giessen_3_battery",
+                  "humidityEntity": "sensor.blumen_giessen_3_humidity",
+                  "moistureEntity": "sensor.blumen_giessen_3_soil_moisture",
+                  "temperatureEntity": "sensor.blumen_giessen_3_temperature",
+                  "image": "https://images.unsplash.com/photo-1612361652367-73292cb378d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                }
+              ],
               "position": {
                 "x": 1,
-                "y": 8
+                "y": 7
               },
               "size": {
-                "width": 2,
+                "width": 3,
                 "height": 2
-              },
-              "plants": "fwfeefwf"
+              }
             }
           ],
           "position": {
