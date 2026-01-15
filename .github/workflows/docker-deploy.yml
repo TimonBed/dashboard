@@ -83,11 +83,11 @@ jobs:
             "bash -l -c 'set -euo pipefail;
             cd \"$STACK_DIR\";
             echo \"Stopping and removing existing containers...\";
-            docker compose down;
+            docker-compose down;
             echo \"Pulling latest images...\";
-            docker compose pull;
+            docker-compose pull;
             echo \"Recreating stack containers...\";
-            docker compose up -d --force-recreate;
+            docker-compose up -d --force-recreate;
             echo \"Stack redeployed successfully!\"'"
 
 
