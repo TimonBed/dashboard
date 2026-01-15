@@ -83,15 +83,16 @@ jobs:
             set -euo pipefail
 
             echo "Stopping and removing existing containers..."
-            docker-compose -f "$COMPOSE_FILE" down
+            docker compose -f "$COMPOSE_FILE" down
 
             echo "Pulling latest images..."
-            docker-compose -f "$COMPOSE_FILE" pull
+            docker compose -f "$COMPOSE_FILE" pull
 
             echo "Recreating stack containers..."
-            docker-compose -f "$COMPOSE_FILE" up -d --force-recreate
+            docker compose -f "$COMPOSE_FILE" up -d --force-recreate
 
             echo "Stack redeployed successfully!"
+          EOF
 
 
       - name: Deployment Status
