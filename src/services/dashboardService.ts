@@ -1,7 +1,6 @@
 import { Dashboard } from "../types/dashboard";
 
 // Import dashboard JSON files (used as fallback in development)
-import mainDashboard from "../data/dashboards/main-dashboard.json";
 import tabletDashboard from "../data/dashboards/tablet-dashboard.json";
 import securityDashboard from "../data/dashboards/security-dashboard.json";
 
@@ -29,7 +28,7 @@ class DashboardService {
     } catch (error) {
       // Fallback to static imports (development mode)
       console.log("📦 Using bundled dashboards (development mode)");
-      this.dashboards = [mainDashboard as Dashboard, tabletDashboard as Dashboard, securityDashboard as Dashboard];
+      this.dashboards = [tabletDashboard as Dashboard, securityDashboard as Dashboard];
       this.isLoaded = true;
     }
   }

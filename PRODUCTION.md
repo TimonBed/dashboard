@@ -211,11 +211,8 @@ NODE_ENV=production
 
 ### Development Mode
 ```javascript
-// dashboardService.ts uses static imports as fallback
-import mainDashboard from "../data/dashboards/main-dashboard.json";
-
 // Falls back to bundled data if API not available
-this.dashboards = [mainDashboard, tabletDashboard, securityDashboard];
+this.dashboards = [tabletDashboard, securityDashboard];
 ```
 
 ### Production Mode

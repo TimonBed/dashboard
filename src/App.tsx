@@ -8,7 +8,6 @@ import { DynamicDashboard } from "./components/DynamicDashboard";
 import { DashboardManager } from "./components/DashboardManager";
 import { SettingsPage } from "./components/SettingsPage";
 import { Notification } from "./components/Notification";
-import MainDashboard from "./components/MainDashboard";
 import { dashboardService } from "./services/dashboardService";
 import { Dashboard } from "./types/dashboard";
 import { useHomeAssistant } from "./hooks/useHomeAssistant";
@@ -18,7 +17,6 @@ function App() {
   useHomeAssistant();
 
   const location = useLocation();
-  const activeTab = location.pathname;
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -75,11 +73,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {!hideSidebar && <Sidebar activeTab={activeTab} onTabChange={() => {}} onDashboardsChange={handleDashboardChange} />}
+      {!hideSidebar && <Sidebar onDashboardsChange={handleDashboardChange} />}
       <div className={`flex-1 ${hideSidebar ? "ml-0" : "ml-16"}`}>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<MainDashboard />} />
           <Route path="/tabletdashboard" element={<TabletDashboard />} />
           <Route path="/debug" element={<WebSocketDebugPage />} />
           <Route path="/tests" element={<UITestsPage />} />

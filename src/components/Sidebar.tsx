@@ -5,12 +5,10 @@ import { dashboardService } from "../services/dashboardService";
 import { Dashboard } from "../types/dashboard";
 
 interface SidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
   onDashboardsChange?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onDashboardsChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onDashboardsChange }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
@@ -133,14 +131,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onDash
 
   return (
     <>
-      <div className="fixed left-0 top-0 h-full w-16 bg-gray-900 flex flex-col items-center py-4 z-40">
+      <div className="fixed left-0 top-0 h-full w-16 min-w-16 max-w-16 bg-gray-900 flex flex-col items-center py-4 z-40">
         {/* Logo/Icon */}
         <div className="mb-8">
           <Activity className="w-8 h-8 text-blue-400" />
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="flex flex-col space-y-4 flex-1 overflow-y-auto">
+        <nav className="flex flex-col space-y-4 flex-1 overflow-y-auto overflow-x-hidden w-full items-center">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = location.pathname === tab.path;
@@ -156,11 +154,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onDash
                   title={tab.label}
                 >
                   <Icon className="w-5 h-5" />
-
-                  {/* Tooltip */}
-                  <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                    {tab.label}
-                  </div>
                 </button>
 
                 {/* Edit button for active dashboard (not system tabs) */}
@@ -172,7 +165,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onDash
                   !tab.path.includes("/settings") && (
                     <button
                       onClick={() => navigate(`${tab.path}?edit=true`)}
-                      className="absolute -right-1 -top-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
+                      className="absolute right-0 top-0 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
                       title="Edit Dashboard"
                     >
                       <Edit className="w-2.5 h-2.5 text-black" />
@@ -190,10 +183,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onDash
           title="Add Dashboard"
         >
           <Plus className="w-5 h-5" />
-          {/* Tooltip */}
-          <div className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-            Add Dashboard
-          </div>
         </button>
       </div>
 
