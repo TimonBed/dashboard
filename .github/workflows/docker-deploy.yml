@@ -63,25 +63,36 @@ jobs:
       #   run: |
       #     curl -X POST 'https://portainer.bedynek.org/api/webhooks/xyz...'
 
-      - name: Redeploy via Portainer (API key)
+      - name: Redeploy Docker stack via SSH
         if: success()
         env:
-          PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
-          PORTAINER_CONTAINER_NAME: ha-dashboard
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         run: |
           set -euo pipefail
 
-          # Hardcode the Portainer API URL and endpoint directly in the script
-          containers="$(curl -fsSL --location -H "X-API-Key: ${PORTAINER_API_KEY}" \
-            "https://portainer.bedynek.org/api/endpoints/2/docker/containers/json?all=1")"
+          # Hardcoded host and compose file path
+          SSH_HOST="bedynek.org"
+          COMPOSE_FILE="/volume1/docker/portainer-ce/compose/22/docker-compose.yml"
 
-          id="$(python3 -c 'import json,os,sys; name=os.environ["PORTAINER_CONTAINER_NAME"]; data=json.loads(sys.stdin.read()); target="/"+name; print(next((c.get("Id","") for c in data if target in (c.get("Names") or [])), ""))' <<<"$containers")"
+          # Install sshpass if not already installed
+          sudo apt-get update && sudo apt-get install -y sshpass
 
-          [ -n "$id" ] || (echo "Container not found: ${PORTAINER_CONTAINER_NAME}" && exit 1)
+          # Run redeploy commands via SSH
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" bash -s <<EOF
+            set -euo pipefail
 
-          curl -fsS --location -X POST -H "X-API-Key: ${PORTAINER_API_KEY}" -H "Content-Type: application/json" \
-            -d '{"PullImage": true}' \
-            "https://portainer.bedynek.org/api/endpoints/2/docker/containers/${id}/recreate"
+            echo "Stopping and removing existing containers..."
+            docker-compose -f "$COMPOSE_FILE" down
+
+            echo "Pulling latest images..."
+            docker-compose -f "$COMPOSE_FILE" pull
+
+            echo "Recreating stack containers..."
+            docker-compose -f "$COMPOSE_FILE" up -d --force-recreate
+
+            echo "Stack redeployed successfully!"
+
 
       - name: Deployment Status
         if: success()
