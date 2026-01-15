@@ -57,6 +57,31 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
     },
   ];
 
+  const getAverageTemperature = (): { display: string; unit: string } | null => {
+    const temps: Array<{ value: number; unit: string }> = [];
+
+    for (const plant of plantsList) {
+      const tempEntityId = plant.temperatureEntity;
+      if (!tempEntityId) continue;
+
+      const entity = entities.get(tempEntityId);
+      if (!entity || entity.state === "unavailable" || entity.state === "unknown") continue;
+
+      const parsed = parseFloat(entity.state);
+      if (isNaN(parsed)) continue;
+
+      temps.push({ value: parsed, unit: entity.attributes.unit_of_measurement || "" });
+    }
+
+    if (temps.length === 0) return null;
+
+    const avg = temps.reduce((sum, t) => sum + t.value, 0) / temps.length;
+    const display = (Math.round(avg * 10) / 10).toFixed(1).replace(/\.0$/, "");
+    const unit = temps.find((t) => t.unit)?.unit || "";
+
+    return { display, unit };
+  };
+
   const renderSensorRow = (entityId: string | undefined, icon: React.ReactNode, max: number, min: number = 0) => {
     let value = 0;
     let displayValue = "--";
@@ -144,6 +169,17 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
             </div>
           </div>
           <h3 className="text-white font-semibold truncate">{title}</h3>
+          {(() => {
+            const avgTemp = getAverageTemperature();
+            if (!avgTemp) return null;
+            return (
+              <div className="ml-auto flex items-center gap-1.5 text-white">
+                <Thermometer className="w-4 h-4 text-gray-300" />
+                <span className="text-[12px] font-semibold tabular-nums leading-none">{avgTemp.display}</span>
+                <span className="text-[10px] text-gray-400 leading-none">{avgTemp.unit}</span>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="grid grid-cols-3 gap-2.5 flex-1 min-h-0 items-start">
@@ -163,7 +199,6 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
               <div className="flex flex-col gap-1 w-full mt-auto">
                 {renderSensorRow(plant.humidityEntity, <Droplets className="w-3 h-3" />, 100, 0)}
                 {renderSensorRow(plant.moistureEntity, <Sprout className="w-3 h-3" />, 100, 0)}
-                {renderSensorRow(plant.temperatureEntity, <Thermometer className="w-3 h-3" />, 40, 0)}
               </div>
             </div>
           ))}
