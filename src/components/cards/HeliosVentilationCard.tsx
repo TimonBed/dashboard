@@ -221,10 +221,10 @@ export const HeliosVentilationCard: React.FC<HeliosVentilationCardProps> = ({
         </Badge>
       </div>
 
-      {/* Fan speed progress (top) */}
-      <div className="flex items-start justify-center pt-1 pb-2">
-        <div className="relative w-20 h-20 flex items-center justify-center">
-          <svg className="absolute top-0 left-0 w-20 h-20" viewBox="0 0 96 96">
+      {/* Fan speed indicator (absolute, independent of layout) */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2">
+        <div className="relative w-28 h-28 flex items-center justify-center">
+          <svg className="absolute top-0 left-0 w-28 h-28" viewBox="0 0 96 96">
             {/* Background circle */}
             <circle cx="48" cy="48" r="44" fill="none" stroke="#122E63" strokeOpacity="0.25" strokeWidth="4.5" />
             {/* Progress circle */}
@@ -244,27 +244,29 @@ export const HeliosVentilationCard: React.FC<HeliosVentilationCardProps> = ({
           </svg>
           <div className="relative z-10 flex flex-col items-center justify-center">
             <Fan
-              className={`w-6 h-6 text-blue-400 mb-0.5 ${fanSpeed > 0 ? "animate-spin" : ""}`}
+              className={`w-8 h-8 text-blue-400 mb-0.5 ${fanSpeed > 0 ? "animate-spin" : ""}`}
               style={{
                 animationDuration: fanSpeed > 0 ? `${Math.max(0.5, 4 - (fanSpeed / 100) * 3.5)}s` : "4s",
                 animationTimingFunction: "linear",
                 animationIterationCount: "infinite",
               }}
             />
-            <span className="text-sm font-semibold text-gray-200 leading-none">{fanSpeed}%</span>
+            <span className="text-xl font-semibold text-gray-200">{fanSpeed}%</span>
           </div>
         </div>
       </div>
 
-      {/* Temperature groups */}
-      <div className="flex-1 flex items-center">
-        <div className="w-full grid grid-cols-2 gap-3 items-start">
-          <div className="flex flex-wrap items-center justify-center gap-3">
+      {/* Main content area with heat exchanger diagram */}
+      <div className="flex-1 flex items-start pt-6 pb-4">
+        <div className="w-full grid grid-cols-2 gap-20 items-start">
+          {/* Left Column */}
+          <div className="w-full flex items-center justify-start gap-12 pr-16">
             <TempMetric label="Indoor air" value={indoorTemp} colorClass="text-red-400" />
             <TempMetric label="Supply air" value={supplyTemp} colorClass="text-blue-400" />
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* Right Column */}
+          <div className="w-full flex items-center justify-end gap-12 pl-16">
             <TempMetric label="Outdoor air" value={outdoorTemp} colorClass="text-green-400" />
             <TempMetric label="Exhaust air" value={exhaustTemp} colorClass="text-orange-400" />
           </div>
