@@ -1,16 +1,17 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
-import { Thermometer, Battery, Sprout, Leaf } from "lucide-react";
-import Badge from "../ui/Badge";
+import { Thermometer, Sprout, Leaf } from "lucide-react";
 import { CardComponentProps } from "../../types/cardProps";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { HistoryService, HistoryState } from "../../services/historyService";
 import { MiniSparkline } from "../ui/MiniSparkline";
+import { BatteryBadge } from "../ui/BatteryBadge";
+import { ProgressBarRow } from "../ui/ProgressBarRow";
 
 interface PlantData {
-  id: string; // or name
-  name: string;
+  id?: string; // or name
+  name?: string;
   batteryEntity?: string;
   moistureEntity?: string; // Soil moisture
   temperatureEntity?: string;
@@ -44,16 +45,30 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
   const getHomeAssistantURL = useSettingsStore((s) => s.getHomeAssistantURL);
   const baseUrl = getHomeAssistantURL();
 
+  const HISTORY_HOURS = 24;
+  const HISTORY_POINTS = 48;
+
   // Normalize plants data: if "plants" array exists use it, otherwise create array from legacy single plant props
-  const plantsList: PlantData[] = plants || [
-    {
-      id: "default",
-      name: title, // Use card title as name for single plant
-      batteryEntity,
-      moistureEntity,
-      temperatureEntity,
-    },
-  ];
+  const plantsList = useMemo((): Array<Required<Pick<PlantData, "id" | "name">> & Omit<PlantData, "id" | "name">> => {
+    const source: PlantData[] =
+      plants && plants.length > 0
+        ? plants
+        : [
+            {
+              id: "default",
+              name: title, // Use card title as name for single plant
+              batteryEntity,
+              moistureEntity,
+              temperatureEntity,
+            },
+          ];
+
+    return source.map((p, i) => ({
+      ...p,
+      id: p.id && p.id.trim() ? p.id : `plant-${i + 1}`,
+      name: p.name && p.name.trim() ? p.name : `Plant ${i + 1}`,
+    }));
+  }, [plants, title, batteryEntity, moistureEntity, temperatureEntity]);
 
   const historyCacheRef = useRef<Map<string, number[]>>(new Map());
   const [historySeriesByEntityId, setHistorySeriesByEntityId] = useState<Record<string, number[]>>({});
@@ -64,6 +79,7 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
   }, [plantsList]);
 
   const downsample = (values: number[], maxPoints: number) => {
+    if (maxPoints <= 0) return [];
     if (values.length <= maxPoints) return values;
     const step = values.length / maxPoints;
     const sampled: number[] = [];
@@ -85,12 +101,10 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
       await Promise.all(
         missing.map(async (entityId) => {
           try {
-            const states: HistoryState[] = await historyService.getStateChanges(entityId, 24);
-            const numeric = states
-              .map((s) => parseFloat(s.state))
-              .filter((n) => !isNaN(n));
+            const states: HistoryState[] = await historyService.getStateChanges(entityId, HISTORY_HOURS);
+            const numeric = states.map((s) => parseFloat(s.state)).filter((n) => !isNaN(n));
 
-            const series = downsample(numeric, 48);
+            const series = downsample(numeric, HISTORY_POINTS);
             historyCacheRef.current.set(entityId, series);
             updates[entityId] = series;
           } catch {
@@ -117,7 +131,7 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
     return historyCacheRef.current.get(entityId) ?? historySeriesByEntityId[entityId] ?? [];
   };
 
-  const getAverageTemperature = (): { display: string; unit: string } | null => {
+  const averageTemperature = useMemo((): { display: string; unit: string } | null => {
     const temps: Array<{ value: number; unit: string }> = [];
 
     for (const plant of plantsList) {
@@ -140,72 +154,25 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
     const unit = temps.find((t) => t.unit)?.unit || "";
 
     return { display, unit };
+  }, [plantsList, entities]);
+
+  const getEntityNumeric = (id?: string): { value: number; displayValue: string; unit: string; hasData: boolean } => {
+    if (!id) return { value: 0, displayValue: "--", unit: "", hasData: false };
+    const entity = entities.get(id);
+    if (!entity || entity.state === "unavailable" || entity.state === "unknown") return { value: 0, displayValue: "--", unit: "", hasData: false };
+    const parsed = parseFloat(entity.state);
+    if (isNaN(parsed)) return { value: 0, displayValue: "--", unit: "", hasData: false };
+    return {
+      value: parsed,
+      displayValue: Math.round(parsed).toString(),
+      unit: entity.attributes.unit_of_measurement || "",
+      hasData: true,
+    };
   };
 
-  const renderSensorRow = (entityId: string | undefined, icon: React.ReactNode, max: number, min: number = 0) => {
-    let value = 0;
-    let displayValue = "--";
-    let unit = "";
-
-    if (entityId) {
-      const entity = entities.get(entityId);
-      if (entity && entity.state !== "unavailable" && entity.state !== "unknown") {
-        const parsed = parseFloat(entity.state);
-        if (!isNaN(parsed)) {
-          value = parsed;
-          displayValue = Math.round(parsed).toString();
-          unit = entity.attributes.unit_of_measurement || "";
-        }
-      }
-    }
-
-    const percentage = Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
-    const barColor = "bg-green-500";
-
-    return (
-      <div className="flex items-center gap-1.5 w-full h-4">
-        <div className="text-gray-300 w-3 flex justify-center scale-90">{icon}</div>
-
-        <div className="flex-1 bg-gray-700/30 rounded-full overflow-hidden" style={{ height: "5px" }}>
-          <div className={`h-full ${barColor} rounded-full transition-all duration-500`} style={{ width: `${percentage}%` }} />
-        </div>
-
-        <div className="text-right min-w-[2.6rem] font-semibold text-white text-[10px] leading-none">
-          {displayValue} <span className="text-[9px] text-gray-400">{unit}</span>
-        </div>
-      </div>
-    );
-  };
-
-  const getBatteryColor = (level: number) => {
-    if (level <= 20) return "red";
-    if (level <= 50) return "yellow";
-    return "green";
-  };
-
-  const renderBattery = (batteryEntity?: string) => {
-    let level = 0;
-    let hasData = false;
-
-    if (batteryEntity) {
-      const entity = entities.get(batteryEntity);
-      if (entity) {
-        const parsed = parseFloat(entity.state);
-        if (!isNaN(parsed)) {
-          level = parsed;
-          hasData = true;
-        }
-      }
-    }
-
-    if (!hasData) return null;
-
-    return (
-      <Badge variant={getBatteryColor(level) as any} className="flex items-center gap-1 px-1.5 py-[2px] h-5 leading-none">
-        <span className="text-[10px] font-semibold leading-none">{level}%</span>
-        <Battery className="w-3 h-3" />
-      </Badge>
-    );
+  const getBatteryLevel = (batteryEntity?: string) => {
+    const { value, hasData } = getEntityNumeric(batteryEntity);
+    return hasData ? value : null;
   };
 
   return (
@@ -217,56 +184,115 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
       onCardDelete={onCardDelete}
       cardConfig={cardConfig}
       height="h-full"
-      padding="px-3 py-2"
+      padding="px-2.5 py-1.5"
       hideHeader={true}
     >
       <div className="h-full flex flex-col min-h-0">
         {/* Compact header (matches Card look but uses much less vertical space than the default header) */}
-        <div className="flex items-center gap-3 mb-1.5">
-          <div className="p-2 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
-            <div className="w-5 h-5 flex items-center justify-center">
-              <Leaf className="w-5 h-5 text-green-500" />
+        <div className="flex items-center gap-2 mb-1">
+          <div className="p-1.5 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
+            <div className="w-4 h-4 flex items-center justify-center">
+              <Leaf className="w-4 h-4 text-green-500" />
             </div>
           </div>
-          <h3 className="text-white font-semibold truncate">{title}</h3>
-          {(() => {
-            const avgTemp = getAverageTemperature();
-            if (!avgTemp) return null;
-            return (
-              <div className="ml-auto flex items-center gap-1.5 text-white">
-                <Thermometer className="w-4 h-4 text-gray-300" />
-                <span className="text-[12px] font-semibold tabular-nums leading-none">{avgTemp.display}</span>
-                <span className="text-[10px] text-gray-400 leading-none">{avgTemp.unit}</span>
-              </div>
-            );
-          })()}
+          <h3 className="text-white font-semibold truncate text-sm">{title}</h3>
+          {averageTemperature ? (
+            <div className="ml-auto flex items-center gap-1 text-white">
+              <Thermometer className="w-3.5 h-3.5 text-gray-300" />
+              <span className="text-[11px] font-semibold tabular-nums leading-none">{averageTemperature.display}</span>
+              <span className="text-[10px] text-gray-400 leading-none">{averageTemperature.unit}</span>
+            </div>
+          ) : null}
         </div>
 
-        <div className="grid grid-cols-3 gap-2.5 flex-1 min-h-0 items-start">
-          {plantsList.map((plant, index) => (
-            <div key={index} className="relative flex flex-col gap-1 min-w-0 border-r border-white/5 last:border-r-0 pr-2">
-              {/* Battery top right with a bit more inset from divider */}
-              <div className="absolute top-0 right-1">{renderBattery(plant.batteryEntity)}</div>
+        {plantsList.length > 4 ? (
+          <div className="flex flex-1 min-h-0 overflow-x-auto items-stretch -mx-2.5 px-2.5">
+            {plantsList.map((plant, idx) => (
+              <div
+                key={`${plant.id}-${idx}`}
+                className="relative flex flex-col gap-0.5 min-w-[150px] w-[150px] px-2 py-0.5 border-r border-white/5 last:border-r-0"
+              >
+                <div className="absolute top-0 right-1">
+                  <BatteryBadge level={getBatteryLevel(plant.batteryEntity)} />
+                </div>
 
-              {/* Name */}
-              {plantsList.length > 1 && (
-                <span className="text-[11px] font-semibold text-white truncate pr-12" title={plant.name}>
+                <span className="text-[10px] font-semibold text-white truncate pr-12" title={plant.name}>
                   {plant.name}
                 </span>
-              )}
 
-              {/* Sensors */}
-              <div className="flex flex-col gap-1 w-full mt-auto">
-                {renderSensorRow(plant.moistureEntity, <Sprout className="w-3 h-3" />, 100, 0)}
-              </div>
+                {plant.moistureEntity ? (
+                  <div className="flex flex-col gap-0.5 w-full mt-auto">
+                    {(() => {
+                      const s = getEntityNumeric(plant.moistureEntity);
+                      return (
+                        <ProgressBarRow
+                          icon={<Sprout className="w-3 h-3" />}
+                          value={s.value}
+                          displayValue={s.displayValue}
+                          unit={s.unit}
+                          max={100}
+                          min={0}
+                          className="h-3.5"
+                        />
+                      );
+                    })()}
+                  </div>
+                ) : null}
 
-              {/* History graph (moisture) */}
-              <div className="mt-1">
-                <MiniSparkline values={getSeries(plant.moistureEntity)} />
+                {plant.moistureEntity ? (
+                  <div className="mt-0.5">
+                    <MiniSparkline values={getSeries(plant.moistureEntity)} />
+                  </div>
+                ) : null}
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-2 flex-1 min-h-0 items-start" style={{ gridTemplateColumns: `repeat(${Math.max(1, plantsList.length)}, minmax(0, 1fr))` }}>
+            {plantsList.map((plant, idx) => (
+              <div key={`${plant.id}-${idx}`} className="relative flex flex-col gap-0.5 min-w-0 border-r border-white/5 last:border-r-0 pr-1.5">
+                {/* Battery top right with a bit more inset from divider */}
+                <div className="absolute top-0 right-1">
+                  <BatteryBadge level={getBatteryLevel(plant.batteryEntity)} />
+                </div>
+
+                {/* Name */}
+                {plantsList.length > 1 && (
+                  <span className="text-[10px] font-semibold text-white truncate pr-12" title={plant.name}>
+                    {plant.name}
+                  </span>
+                )}
+
+                {/* Sensors */}
+                {plant.moistureEntity ? (
+                  <div className="flex flex-col gap-0.5 w-full mt-auto">
+                    {(() => {
+                      const s = getEntityNumeric(plant.moistureEntity);
+                      return (
+                        <ProgressBarRow
+                          icon={<Sprout className="w-3 h-3" />}
+                          value={s.value}
+                          displayValue={s.displayValue}
+                          unit={s.unit}
+                          max={100}
+                          min={0}
+                          className="h-3.5"
+                        />
+                      );
+                    })()}
+                  </div>
+                ) : null}
+
+                {/* History graph (moisture) */}
+                {plant.moistureEntity ? (
+                  <div className="mt-0.5">
+                    <MiniSparkline values={getSeries(plant.moistureEntity)} />
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );

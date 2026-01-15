@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Save, Settings, Search, Home, Code, Edit3, AlertCircle, Trash2, History } from "lucide-react";
+import { X, Save, Settings, Search, Home, Code, Edit3, AlertCircle, Trash2, History, Plus } from "lucide-react";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { getCardRequirements, validateCardConfig } from "../../types/cardRequirements";
@@ -96,18 +96,16 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
 
     if (cardConfig?.type === "plant-sensor") {
       const existing = Array.isArray(cardConfig?.plants) ? cardConfig.plants : [];
-      const normalized = Array.from({ length: 3 }).map((_, i) => {
-        const p = existing[i] || {};
-        return {
-          id: p.id || `plant-${i + 1}`,
-          name: p.name || `Plant ${i + 1}`,
-          batteryEntity: p.batteryEntity || "",
-          humidityEntity: p.humidityEntity || "",
-          moistureEntity: p.moistureEntity || "",
-          temperatureEntity: p.temperatureEntity || "",
-          image: p.image || "",
-        };
-      });
+      const source = existing.length > 0 ? existing : [{}];
+      const normalized = source.map((p: any, i: number) => ({
+        id: p.id || `plant-${i + 1}`,
+        name: p.name || `Plant ${i + 1}`,
+        batteryEntity: p.batteryEntity || "",
+        humidityEntity: p.humidityEntity || "",
+        moistureEntity: p.moistureEntity || "",
+        temperatureEntity: p.temperatureEntity || "",
+        image: p.image || "",
+      }));
       setPlantsDraft(normalized);
     } else {
       setPlantsDraft([]);
@@ -150,6 +148,36 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
     setPlantsDraft((prev) => {
       const next = [...prev];
       next[index] = { ...(next[index] || {}), [field]: value };
+      return next;
+    });
+  };
+
+  const addPlant = () => {
+    setPlantsDraft((prev) => {
+      const nextIndex = prev.length;
+      const next = [
+        ...prev,
+        {
+          id: `plant-${nextIndex + 1}`,
+          name: `Plant ${nextIndex + 1}`,
+          batteryEntity: "",
+          humidityEntity: "",
+          moistureEntity: "",
+          temperatureEntity: "",
+          image: "",
+        },
+      ];
+      setPlantTab(nextIndex);
+      return next;
+    });
+  };
+
+  const removePlant = (index: number) => {
+    setPlantsDraft((prev) => {
+      if (prev.length <= 1) return prev;
+      const next = prev.filter((_, i) => i !== index);
+      const nextTab = Math.min(Math.max(0, index - 1), next.length - 1);
+      setPlantTab(nextTab);
       return next;
     });
   };
@@ -342,7 +370,7 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
                   </div>
 
                   {/* Plant Tabs */}
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     {plantsDraft.map((p, idx) => (
                       <button
                         key={p.id || idx}
@@ -358,11 +386,35 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
                         {p.name || `Plant ${idx + 1}`}
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      onClick={addPlant}
+                      className="px-3 py-2 rounded-xl border bg-gray-800/30 border-gray-700/50 text-gray-300 hover:bg-white/5 transition-colors text-sm flex items-center gap-2"
+                      title="Add plant"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add
+                    </button>
                   </div>
 
                   {/* Plant Editor */}
                   {plantsDraft[plantTab] && (
                     <div className="bg-gray-800/30 border border-gray-700/50 rounded-2xl p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-300">
+                          Editing: <span className="text-white font-semibold">{plantsDraft[plantTab].name || `Plant ${plantTab + 1}`}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removePlant(plantTab)}
+                          disabled={plantsDraft.length <= 1}
+                          className="px-3 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          title="Remove this plant"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Remove
+                        </button>
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">Plant Name</label>
