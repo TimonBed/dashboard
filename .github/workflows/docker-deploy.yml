@@ -61,30 +61,19 @@ jobs:
       # - name: Trigger Portainer Webhook
       #   if: success()
       #   run: |
-      #     curl -X POST '${{ secrets.PORTAINER_WEBHOOK_URL }}'
+      #     curl -X POST 'https://portainer.bedynek.org/api/webhooks/xyz...'
 
       - name: Redeploy via Portainer (API key)
         if: success()
         env:
-          PORTAINER_URL: https://portainer.bedynek.org
           PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
-          PORTAINER_ENDPOINT_ID: ${{ secrets.PORTAINER_ENDPOINT_ID }}
           PORTAINER_CONTAINER_NAME: ha-dashboard
         run: |
           set -euo pipefail
-          echo "PORTAINER_URL: $PORTAINER_URL"
 
-
-          # Normalize PORTAINER_URL so it works with or without a trailing `/api`
-          base="${PORTAINER_URL%/}"
-          if [[ "$base" == */api ]]; then
-            api_base="$base"
-          else
-            api_base="$base/api"
-          fi
-
+          # Hardcode the Portainer API URL and endpoint directly in the script
           containers="$(curl -fsSL --location -H "X-API-Key: ${PORTAINER_API_KEY}" \
-            "${api_base}/endpoints/${PORTAINER_ENDPOINT_ID}/docker/containers/json?all=1")"
+            "https://portainer.bedynek.org/api/endpoints/2/docker/containers/json?all=1")"
 
           id="$(python3 -c 'import json,os,sys; name=os.environ["PORTAINER_CONTAINER_NAME"]; data=json.loads(sys.stdin.read()); target="/"+name; print(next((c.get("Id","") for c in data if target in (c.get("Names") or [])), ""))' <<<"$containers")"
 
@@ -92,7 +81,7 @@ jobs:
 
           curl -fsS --location -X POST -H "X-API-Key: ${PORTAINER_API_KEY}" -H "Content-Type: application/json" \
             -d '{"PullImage": true}' \
-            "${api_base}/endpoints/${PORTAINER_ENDPOINT_ID}/docker/containers/${id}/recreate"
+            "https://portainer.bedynek.org/api/endpoints/2/docker/containers/${id}/recreate"
 
       - name: Deployment Status
         if: success()
