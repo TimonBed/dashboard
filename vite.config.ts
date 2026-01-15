@@ -1,8 +1,32 @@
 import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+
+const safeExec = (command: string): string | null => {
+  try {
+    return execSync(command, { encoding: "utf8" }).trim();
+  } catch {
+    return null;
+  }
+};
+
+const packageJson = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as { version?: string };
+const appVersion = packageJson.version ?? "0.0.0";
+
+const gitBuildNumber = safeExec("git rev-list --count HEAD");
+const gitSha = safeExec("git rev-parse --short HEAD");
+const buildNumber = process.env.BUILD_NUMBER ?? gitBuildNumber ?? String(Date.now());
+const buildTime = new Date().toISOString();
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+    __BUILD_NUMBER__: JSON.stringify(buildNumber),
+    __BUILD_SHA__: JSON.stringify(gitSha ?? ""),
+    __BUILD_TIME__: JSON.stringify(buildTime),
+  },
   plugins: [
     react(),
     {

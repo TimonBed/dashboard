@@ -10,6 +10,8 @@ export const SettingsPage: React.FC = () => {
   const [showToken, setShowToken] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
 
+  const versionLabel = `v${__APP_VERSION__} (build ${__BUILD_NUMBER__}${__BUILD_SHA__ ? `, ${__BUILD_SHA__}` : ""})`;
+
   // Save settings using the store
   const saveSettings = async () => {
     setIsSaving(true);
@@ -73,6 +75,7 @@ export const SettingsPage: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
           </div>
           <p className="text-gray-600">Configure your dashboard settings and Home Assistant connection.</p>
+          <p className="text-sm text-gray-500 mt-1">{versionLabel}</p>
         </div>
 
         {/* Settings Form */}
