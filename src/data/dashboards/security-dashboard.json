@@ -378,7 +378,7 @@
               },
               "size": {
                 "width": 2,
-                "height": 2
+                "height": 1
               },
               "heliosSettings": {
                 "indoorAirEntity": "sensor.kwl_220_d_l_indoor_temperature",

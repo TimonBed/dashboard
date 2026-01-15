@@ -4,6 +4,7 @@ import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { useHomeAssistant } from "../../hooks/useHomeAssistant";
 import Badge from "../ui/Badge";
+import { CardIconFrame } from "../ui/CardIconFrame";
 import { CardComponentProps } from "../../types/cardProps";
 
 interface HeliosVentilationCardSpecificProps {
@@ -94,21 +95,12 @@ export const HeliosVentilationCard: React.FC<HeliosVentilationCardProps> = ({
     return haEntity?.attributes?.mode || "AtHome";
   };
 
-  const getCurrentModeOptions = () => {
-    if (heliosSettings.buttonStateEntity) {
-      const entity = entities.get(heliosSettings.buttonStateEntity);
-      return entity?.attributes?.options || ["home", "away", "boost", "auto"];
-    }
-    return ["home", "away", "boost", "auto"];
-  };
-
   const supplyTemp = getSupplyTemp();
   const indoorTemp = getIndoorTemp();
   const outdoorTemp = getOutdoorTemp();
   const exhaustTemp = getExhaustTemp();
   const fanSpeed = getFanSpeed();
   const currentMode = getCurrentMode();
-  const modeOptions = getCurrentModeOptions();
 
   // Mode buttons configuration
   const modes = [
@@ -184,6 +176,20 @@ export const HeliosVentilationCard: React.FC<HeliosVentilationCardProps> = ({
     }
   };
 
+  const TempMetric: React.FC<{ label: string; value: number; colorClass: string }> = ({ label, value, colorClass }) => {
+    return (
+      <div className="flex items-center gap-2 min-w-0">
+        <CardIconFrame className="p-1.5" iconClassName={colorClass}>
+          <Thermometer className="w-3.5 h-3.5" />
+        </CardIconFrame>
+        <div className="min-w-0">
+          <div className={`text-xs font-semibold leading-none ${colorClass}`}>{label}</div>
+          <div className="text-white text-sm font-bold leading-tight">{value}°C</div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Card
       title={title}
@@ -215,85 +221,52 @@ export const HeliosVentilationCard: React.FC<HeliosVentilationCardProps> = ({
         </Badge>
       </div>
 
-      {/* Main content area with heat exchanger diagram */}
-      <div className="flex-1 flex items-center py-4">
-        <div className="w-full grid grid-cols-3 gap-4 items-center">
-          {/* Left Column */}
-          <div className="flex flex-col gap-4">
-            {/* Indoor Air - Top */}
-            <div className="flex flex-col items-center">
-              <div className="text-red-400 text-sm font-semibold mb-1">Indoor air</div>
-              <div className="flex items-center gap-1.5">
-                <Thermometer className="w-3.5 h-3.5 text-red-400" />
-                <span className="text-white text-base font-bold">{indoorTemp}°C</span>
-              </div>
-            </div>
+      {/* Fan speed progress (top) */}
+      <div className="flex items-start justify-center pt-1 pb-2">
+        <div className="relative w-20 h-20 flex items-center justify-center">
+          <svg className="absolute top-0 left-0 w-20 h-20" viewBox="0 0 96 96">
+            {/* Background circle */}
+            <circle cx="48" cy="48" r="44" fill="none" stroke="#122E63" strokeOpacity="0.25" strokeWidth="4.5" />
+            {/* Progress circle */}
+            <circle
+              cx="48"
+              cy="48"
+              r="44"
+              fill="none"
+              stroke="#2D9CFA"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 44}`}
+              strokeDashoffset={`${2 * Math.PI * 44 * (1 - fanSpeed / 100)}`}
+              transform="rotate(-90 48 48)"
+              className="transition-all duration-500 ease-in-out"
+            />
+          </svg>
+          <div className="relative z-10 flex flex-col items-center justify-center">
+            <Fan
+              className={`w-6 h-6 text-blue-400 mb-0.5 ${fanSpeed > 0 ? "animate-spin" : ""}`}
+              style={{
+                animationDuration: fanSpeed > 0 ? `${Math.max(0.5, 4 - (fanSpeed / 100) * 3.5)}s` : "4s",
+                animationTimingFunction: "linear",
+                animationIterationCount: "infinite",
+              }}
+            />
+            <span className="text-sm font-semibold text-gray-200 leading-none">{fanSpeed}%</span>
+          </div>
+        </div>
+      </div>
 
-            {/* Supply Air - Bottom */}
-            <div className="flex flex-col items-center">
-              <div className="text-blue-400 text-sm font-semibold mb-1">Supply air</div>
-              <div className="flex items-center gap-1.5">
-                <Thermometer className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-white text-base font-bold">{supplyTemp}°C</span>
-              </div>
-            </div>
+      {/* Temperature groups */}
+      <div className="flex-1 flex items-center">
+        <div className="w-full grid grid-cols-2 gap-3 items-start">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <TempMetric label="Indoor air" value={indoorTemp} colorClass="text-red-400" />
+            <TempMetric label="Supply air" value={supplyTemp} colorClass="text-blue-400" />
           </div>
 
-          {/* Center Column - Fan Speed */}
-          <div className="flex items-center justify-center">
-            <div className="relative w-24 h-24 flex items-center justify-center">
-              <svg className="absolute top-0 left-0 w-24 h-24" viewBox="0 0 96 96">
-                {/* Background circle */}
-                <circle cx="48" cy="48" r="44" fill="none" stroke="#122E63" strokeOpacity="0.25" strokeWidth="4.5" />
-                {/* Progress circle */}
-                <circle
-                  cx="48"
-                  cy="48"
-                  r="44"
-                  fill="none"
-                  stroke="#2D9CFA"
-                  strokeWidth="4.5"
-                  strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 44}`}
-                  strokeDashoffset={`${2 * Math.PI * 44 * (1 - fanSpeed / 100)}`}
-                  transform="rotate(-90 48 48)"
-                  className="transition-all duration-500 ease-in-out"
-                />
-              </svg>
-              {/* Fan icon with spin animation */}
-              <div className="relative z-10 flex flex-col items-center justify-center">
-                <Fan
-                  className={`w-7 h-7 text-blue-400 mb-1 ${fanSpeed > 0 ? "animate-spin" : ""}`}
-                  style={{
-                    animationDuration: fanSpeed > 0 ? `${Math.max(0.5, 4 - (fanSpeed / 100) * 3.5)}s` : "4s",
-                    animationTimingFunction: "linear",
-                    animationIterationCount: "infinite",
-                  }}
-                />
-                <span className="text-lg font-semibold text-gray-200 mt-1">{fanSpeed}%</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="flex flex-col gap-4">
-            {/* Outdoor Air - Top */}
-            <div className="flex flex-col items-center">
-              <div className="text-green-400 text-sm font-semibold mb-1">Outdoor air</div>
-              <div className="flex items-center gap-1.5">
-                <Thermometer className="w-3.5 h-3.5 text-green-400" />
-                <span className="text-white text-base font-bold">{outdoorTemp}°C</span>
-              </div>
-            </div>
-
-            {/* Exhaust Air - Bottom */}
-            <div className="flex flex-col items-center">
-              <div className="text-orange-400 text-sm font-semibold mb-1">Exhaust air</div>
-              <div className="flex items-center gap-1.5">
-                <Thermometer className="w-3.5 h-3.5 text-orange-400" />
-                <span className="text-white text-base font-bold">{exhaustTemp}°C</span>
-              </div>
-            </div>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <TempMetric label="Outdoor air" value={outdoorTemp} colorClass="text-green-400" />
+            <TempMetric label="Exhaust air" value={exhaustTemp} colorClass="text-orange-400" />
           </div>
         </div>
       </div>
