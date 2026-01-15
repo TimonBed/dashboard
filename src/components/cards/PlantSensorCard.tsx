@@ -8,6 +8,7 @@ import { HistoryService, HistoryState } from "../../services/historyService";
 import { MiniSparkline } from "../ui/MiniSparkline";
 import { BatteryBadge } from "../ui/BatteryBadge";
 import { ProgressBarRow } from "../ui/ProgressBarRow";
+import { CardIconFrame } from "../ui/CardIconFrame";
 
 interface PlantData {
   id?: string; // or name
@@ -190,11 +191,9 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
       <div className="h-full flex flex-col min-h-0">
         {/* Compact header (matches Card look but uses much less vertical space than the default header) */}
         <div className="flex items-center gap-2 mb-1">
-          <div className="p-1.5 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
-            <div className="w-4 h-4 flex items-center justify-center">
-              <Leaf className="w-4 h-4 text-green-500" />
-            </div>
-          </div>
+          <CardIconFrame>
+            <Leaf className="w-5 h-5 text-green-500" />
+          </CardIconFrame>
           <h3 className="text-white font-semibold truncate text-sm">{title}</h3>
           {averageTemperature ? (
             <div className="ml-auto flex items-center gap-1 text-white">
@@ -210,47 +209,50 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
             {plantsList.map((plant, idx) => (
               <div
                 key={`${plant.id}-${idx}`}
-                className="relative flex flex-col gap-0.5 min-w-[150px] w-[150px] px-2 py-0.5 border-r border-white/5 last:border-r-0"
+                className="relative flex flex-col gap-1.5 min-w-[150px] w-[150px] h-full min-h-0 px-2 py-1 border-r border-white/5 last:border-r-0"
               >
                 <div className="absolute top-0 right-1">
                   <BatteryBadge level={getBatteryLevel(plant.batteryEntity)} />
                 </div>
 
-                <span className="text-[10px] font-semibold text-white truncate pr-12" title={plant.name}>
+                <span className="text-[10px] font-semibold text-white truncate pr-16" title={plant.name}>
                   {plant.name}
                 </span>
 
                 {plant.moistureEntity ? (
-                  <div className="flex flex-col gap-0.5 w-full mt-auto">
-                    {(() => {
-                      const s = getEntityNumeric(plant.moistureEntity);
-                      return (
-                        <ProgressBarRow
-                          icon={<Sprout className="w-3 h-3" />}
-                          value={s.value}
-                          displayValue={s.displayValue}
-                          unit={s.unit}
-                          max={100}
-                          min={0}
-                          className="h-3.5"
-                        />
-                      );
-                    })()}
-                  </div>
-                ) : null}
+                  <>
+                    <div className="flex flex-col gap-0.5 w-full">
+                      {(() => {
+                        const s = getEntityNumeric(plant.moistureEntity);
+                        return (
+                          <ProgressBarRow
+                            icon={<Sprout className="w-3 h-3" />}
+                            value={s.value}
+                            displayValue={s.displayValue}
+                            unit={s.unit}
+                            max={100}
+                            min={0}
+                            className="h-3.5"
+                          />
+                        );
+                      })()}
+                    </div>
 
-                {plant.moistureEntity ? (
-                  <div className="mt-0.5">
-                    <MiniSparkline values={getSeries(plant.moistureEntity)} />
-                  </div>
+                    <div className="flex-1 min-h-0">
+                      <MiniSparkline
+                        values={getSeries(plant.moistureEntity)}
+                        className="h-full w-full rounded-md bg-white/5 border border-white/10 overflow-hidden"
+                      />
+                    </div>
+                  </>
                 ) : null}
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid gap-2 flex-1 min-h-0 items-start" style={{ gridTemplateColumns: `repeat(${Math.max(1, plantsList.length)}, minmax(0, 1fr))` }}>
+          <div className="grid gap-2 flex-1 min-h-0 items-stretch" style={{ gridTemplateColumns: `repeat(${Math.max(1, plantsList.length)}, minmax(0, 1fr))` }}>
             {plantsList.map((plant, idx) => (
-              <div key={`${plant.id}-${idx}`} className="relative flex flex-col gap-0.5 min-w-0 border-r border-white/5 last:border-r-0 pr-1.5">
+              <div key={`${plant.id}-${idx}`} className="relative flex flex-col gap-1.5 min-w-0 h-full border-r border-white/5 last:border-r-0 pr-1.5">
                 {/* Battery top right with a bit more inset from divider */}
                 <div className="absolute top-0 right-1">
                   <BatteryBadge level={getBatteryLevel(plant.batteryEntity)} />
@@ -258,36 +260,39 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
 
                 {/* Name */}
                 {plantsList.length > 1 && (
-                  <span className="text-[10px] font-semibold text-white truncate pr-12" title={plant.name}>
+                  <span className="text-[10px] font-semibold text-white truncate pr-16" title={plant.name}>
                     {plant.name}
                   </span>
                 )}
 
-                {/* Sensors */}
                 {plant.moistureEntity ? (
-                  <div className="flex flex-col gap-0.5 w-full mt-auto">
-                    {(() => {
-                      const s = getEntityNumeric(plant.moistureEntity);
-                      return (
-                        <ProgressBarRow
-                          icon={<Sprout className="w-3 h-3" />}
-                          value={s.value}
-                          displayValue={s.displayValue}
-                          unit={s.unit}
-                          max={100}
-                          min={0}
-                          className="h-3.5"
-                        />
-                      );
-                    })()}
-                  </div>
-                ) : null}
+                  <>
+                    {/* Sensors */}
+                    <div className="flex flex-col gap-0.5 w-full">
+                      {(() => {
+                        const s = getEntityNumeric(plant.moistureEntity);
+                        return (
+                          <ProgressBarRow
+                            icon={<Sprout className="w-3 h-3" />}
+                            value={s.value}
+                            displayValue={s.displayValue}
+                            unit={s.unit}
+                            max={100}
+                            min={0}
+                            className="h-3.5"
+                          />
+                        );
+                      })()}
+                    </div>
 
-                {/* History graph (moisture) */}
-                {plant.moistureEntity ? (
-                  <div className="mt-0.5">
-                    <MiniSparkline values={getSeries(plant.moistureEntity)} />
-                  </div>
+                    {/* History graph (moisture) */}
+                    <div className="flex-1 min-h-0">
+                      <MiniSparkline
+                        values={getSeries(plant.moistureEntity)}
+                        className="h-full w-full rounded-md bg-white/5 border border-white/10 overflow-hidden"
+                      />
+                    </div>
+                  </>
                 ) : null}
               </div>
             ))}
