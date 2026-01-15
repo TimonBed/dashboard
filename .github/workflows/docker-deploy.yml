@@ -78,21 +78,16 @@ jobs:
           # Install sshpass if not already installed
           sudo apt-get update && sudo apt-get install -y sshpass
 
-          # Run redeploy commands via SSH
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" bash -s <<EOF
-            set -euo pipefail
-
-            echo "Stopping and removing existing containers..."
-            docker compose -f "$COMPOSE_FILE" down
-
-            echo "Pulling latest images..."
-            docker compose -f "$COMPOSE_FILE" pull
-
-            echo "Recreating stack containers..."
-            docker compose -f "$COMPOSE_FILE" up -d --force-recreate
-
-            echo "Stack redeployed successfully!"
-          EOF
+          # Run redeploy commands via SSH using a login shell
+          sshpass -p "$SSH_PASSWORD" ssh -t -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" \
+            "bash -l -c 'set -euo pipefail;
+            echo \"Stopping and removing existing containers...\";
+            docker compose -f \"$COMPOSE_FILE\" down;
+            echo \"Pulling latest images...\";
+            docker compose -f \"$COMPOSE_FILE\" pull;
+            echo \"Recreating stack containers...\";
+            docker compose -f \"$COMPOSE_FILE\" up -d --force-recreate;
+            echo \"Stack redeployed successfully!\"'"
 
 
       - name: Deployment Status
