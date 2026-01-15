@@ -66,7 +66,7 @@ jobs:
       - name: Redeploy via Portainer (API key)
         if: success()
         env:
-          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
+          PORTAINER_URL: https://portainer.bedynek.org
           PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
           PORTAINER_ENDPOINT_ID: ${{ secrets.PORTAINER_ENDPOINT_ID }}
           PORTAINER_CONTAINER_NAME: ha-dashboard
