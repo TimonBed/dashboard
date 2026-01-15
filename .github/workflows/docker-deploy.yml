@@ -73,7 +73,7 @@ jobs:
 
           # Hardcoded host and compose folder
           SSH_HOST="bedynek.org"
-          STACK_DIR="/volume1/docker/portainer-ce/compose/22"
+          STACK_DIR="/volume1/docker/portainer-ce/compose/dashboards"
 
           # Install sshpass if not already installed
           sudo apt-get update && sudo apt-get install -y sshpass
