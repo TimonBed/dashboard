@@ -89,6 +89,40 @@ export default defineConfig({
             return;
           }
 
+          // DELETE /api/dashboard/:id - Delete a dashboard file
+          if (req.method === "DELETE" && typeof req.url === "string" && req.url.startsWith("/api/dashboard/")) {
+            try {
+              const fs = await import("fs");
+              const path = await import("path");
+              const url = await import("url");
+              const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+
+              const rawId = req.url.substring("/api/dashboard/".length).split("?")[0] || "";
+              const dashboardId = decodeURIComponent(rawId).replace(/\.json$/i, "");
+
+              if (!dashboardId) {
+                res.writeHead(400, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ success: false, error: "Missing dashboard id" }));
+                return;
+              }
+
+              const filePath = path.resolve(__dirname, `src/data/dashboards/${dashboardId}.json`);
+              if (!fs.existsSync(filePath)) {
+                res.writeHead(404, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ success: false, error: "Dashboard not found" }));
+                return;
+              }
+
+              fs.unlinkSync(filePath);
+              res.writeHead(200, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({ success: true, message: "Dashboard deleted successfully", path: filePath }));
+            } catch (error: any) {
+              res.writeHead(500, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({ success: false, error: error.message }));
+            }
+            return;
+          }
+
           next();
         });
       },

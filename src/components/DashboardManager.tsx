@@ -27,20 +27,36 @@ export const DashboardManager: React.FC<DashboardManagerProps> = ({ onDashboardC
     setIsEditing(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this dashboard?")) {
-      dashboardService.deleteDashboard(id);
-      loadDashboards();
+      await dashboardService.deleteDashboard(id);
+      await loadDashboards();
       onDashboardChange?.();
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editingDashboard) {
-      dashboardService.updateDashboard(editingDashboard.id, editingDashboard);
-      loadDashboards();
+      const now = new Date().toISOString();
+      const dashboardToSave: Dashboard = {
+        ...editingDashboard,
+        createdAt: editingDashboard.createdAt || now,
+        updatedAt: now,
+      };
+
+      const exists = dashboards.some((d) => d.id === dashboardToSave.id);
+
+      if (showAddForm || !exists) {
+        await dashboardService.addDashboard(dashboardToSave);
+      } else {
+        await dashboardService.updateDashboard(dashboardToSave.id, dashboardToSave);
+        await dashboardService.saveDashboardToFile(dashboardToSave.id, dashboardToSave);
+      }
+
+      await loadDashboards();
       setIsEditing(false);
       setEditingDashboard(null);
+      setShowAddForm(false);
       onDashboardChange?.();
     }
   };

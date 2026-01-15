@@ -65,19 +65,36 @@ class DashboardService {
   }
 
   public async addDashboard(dashboard: Dashboard): Promise<void> {
+    await this.ensureLoaded();
     this.dashboards.push(dashboard);
     await this.saveDashboardToFile(dashboard.id, dashboard);
   }
 
-  public updateDashboard(id: string, updatedDashboard: Dashboard): void {
+  public async updateDashboard(id: string, updatedDashboard: Dashboard): Promise<void> {
+    await this.ensureLoaded();
     const index = this.dashboards.findIndex((dashboard) => dashboard.id === id);
     if (index !== -1) {
       this.dashboards[index] = updatedDashboard;
     }
   }
 
-  public deleteDashboard(id: string): void {
+  public async deleteDashboard(id: string): Promise<void> {
+    await this.ensureLoaded();
+
+    // Optimistically update in-memory list
     this.dashboards = this.dashboards.filter((dashboard) => dashboard.id !== id);
+
+    // Persist deletion via API (dev middleware or production server)
+    try {
+      const response = await fetch(`/api/dashboard/${encodeURIComponent(id)}`, { method: "DELETE" });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || `Failed to delete dashboard ${id}`);
+      }
+      console.log(`🗑️ Dashboard ${id} deleted from file`);
+    } catch (error: any) {
+      console.warn("API not available for delete; dashboard removed in-memory only:", error?.message || error);
+    }
   }
 
   public async updateCardConfig(dashboardId: string, cardId: string, newConfig: any): Promise<boolean> {

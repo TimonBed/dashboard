@@ -125,6 +125,32 @@ app.post("/api/dashboard", (req, res) => {
   }
 });
 
+// API endpoint for deleting dashboards
+app.delete("/api/dashboard/:id", (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, error: "Missing dashboard id" });
+    }
+
+    const dashboardDir = getDashboardDir();
+    const safeId = decodeURIComponent(String(id)).replace(/\.json$/i, "");
+    const filePath = path.join(dashboardDir, `${safeId}.json`);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, error: "Dashboard not found" });
+    }
+
+    fs.unlinkSync(filePath);
+    console.log(`🗑️ Dashboard deleted: ${filePath}`);
+
+    return res.json({ success: true, message: "Dashboard deleted successfully", path: filePath });
+  } catch (error) {
+    console.error("Error deleting dashboard:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
