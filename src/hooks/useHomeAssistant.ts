@@ -22,17 +22,17 @@ export const useHomeAssistant = () => {
   // Build WebSocket URL from settings
   const getWebSocketURL = () => {
     if (!homeAssistantIP) return "";
-    
+
     // If it's already a full URL, convert to WebSocket
-    if (homeAssistantIP.startsWith('http')) {
-      return homeAssistantIP.replace(/^https?:\/\//, 'ws://').replace(/^http:\/\//, 'ws://') + '/api/websocket';
+    if (homeAssistantIP.startsWith("http")) {
+      return homeAssistantIP.replace(/^https?:\/\//, "ws://").replace(/^http:\/\//, "ws://") + "/api/websocket";
     }
-    
+
     // Check if port is already included
-    const hasPort = homeAssistantIP.includes(':');
-    const isDomain = homeAssistantIP.includes('.') || homeAssistantIP === 'localhost';
+    const hasPort = homeAssistantIP.includes(":");
+    const isDomain = homeAssistantIP.includes(".") || homeAssistantIP === "localhost";
     const protocol = homeAssistantIP === "localhost" ? "ws" : "wss";
-    
+
     if (hasPort) {
       // Port is already included, just add protocol and path
       return `${protocol}://${homeAssistantIP}/api/websocket`;
@@ -55,7 +55,7 @@ export const useHomeAssistant = () => {
 
     // Create a settings key to detect changes
     const currentSettings = `${homeAssistantIP}:${homeAssistantToken}`;
-    
+
     // If settings changed, reset global state
     if (lastConnectionSettings && lastConnectionSettings !== currentSettings) {
       globalConnectionAttempted = false;
@@ -88,7 +88,7 @@ export const useHomeAssistant = () => {
         if (!wsUrl) {
           throw new Error("Invalid WebSocket URL configuration");
         }
-        
+
         console.log("Connecting to WebSocket with URL:", wsUrl);
 
         // Mark global connection as attempted
