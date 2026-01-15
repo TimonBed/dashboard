@@ -1,18 +1,19 @@
-import React, { memo } from "react";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "./Card";
 import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
-import { Thermometer, Droplets, Battery, Sprout, Leaf } from "lucide-react";
+import { Thermometer, Battery, Sprout, Leaf } from "lucide-react";
 import Badge from "../ui/Badge";
 import { CardComponentProps } from "../../types/cardProps";
+import { useSettingsStore } from "../../store/useSettingsStore";
+import { HistoryService, HistoryState } from "../../services/historyService";
+import { MiniSparkline } from "../ui/MiniSparkline";
 
 interface PlantData {
   id: string; // or name
   name: string;
   batteryEntity?: string;
-  humidityEntity?: string;
   moistureEntity?: string; // Soil moisture
   temperatureEntity?: string;
-  image?: string;
 }
 
 interface PlantSensorCardSpecificProps {
@@ -20,10 +21,8 @@ interface PlantSensorCardSpecificProps {
   plants?: PlantData[];
   // Legacy props for single plant backward compatibility
   batteryEntity?: string;
-  humidityEntity?: string;
   moistureEntity?: string;
   temperatureEntity?: string;
-  image?: string;
 }
 
 type PlantSensorCardProps = CardComponentProps<PlantSensorCardSpecificProps>;
@@ -33,16 +32,17 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
   entityId,
   plants,
   batteryEntity,
-  humidityEntity,
   moistureEntity,
   temperatureEntity,
-  image,
   onTitleChange,
   onJsonSave,
   onCardDelete,
   cardConfig,
 }) => {
   const { entities } = useHomeAssistantStore();
+  const homeAssistantToken = useSettingsStore((s) => s.homeAssistantToken);
+  const getHomeAssistantURL = useSettingsStore((s) => s.getHomeAssistantURL);
+  const baseUrl = getHomeAssistantURL();
 
   // Normalize plants data: if "plants" array exists use it, otherwise create array from legacy single plant props
   const plantsList: PlantData[] = plants || [
@@ -50,12 +50,72 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
       id: "default",
       name: title, // Use card title as name for single plant
       batteryEntity,
-      humidityEntity,
       moistureEntity,
       temperatureEntity,
-      image,
     },
   ];
+
+  const historyCacheRef = useRef<Map<string, number[]>>(new Map());
+  const [historySeriesByEntityId, setHistorySeriesByEntityId] = useState<Record<string, number[]>>({});
+
+  const historyEntityIds = useMemo(() => {
+    const ids = plantsList.map((p) => p.moistureEntity).filter(Boolean) as string[];
+    return Array.from(new Set(ids));
+  }, [plantsList]);
+
+  const downsample = (values: number[], maxPoints: number) => {
+    if (values.length <= maxPoints) return values;
+    const step = values.length / maxPoints;
+    const sampled: number[] = [];
+    for (let i = 0; i < maxPoints; i++) {
+      sampled.push(values[Math.floor(i * step)]);
+    }
+    return sampled;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    const missing = historyEntityIds.filter((id) => !historyCacheRef.current.has(id));
+    if (!baseUrl || !homeAssistantToken || missing.length === 0) return;
+
+    const load = async () => {
+      const historyService = new HistoryService(baseUrl, homeAssistantToken);
+      const updates: Record<string, number[]> = {};
+
+      await Promise.all(
+        missing.map(async (entityId) => {
+          try {
+            const states: HistoryState[] = await historyService.getStateChanges(entityId, 24);
+            const numeric = states
+              .map((s) => parseFloat(s.state))
+              .filter((n) => !isNaN(n));
+
+            const series = downsample(numeric, 48);
+            historyCacheRef.current.set(entityId, series);
+            updates[entityId] = series;
+          } catch {
+            historyCacheRef.current.set(entityId, []);
+            updates[entityId] = [];
+          }
+        })
+      );
+
+      if (cancelled) return;
+      if (Object.keys(updates).length > 0) {
+        setHistorySeriesByEntityId((prev) => ({ ...prev, ...updates }));
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [baseUrl, homeAssistantToken, historyEntityIds]);
+
+  const getSeries = (entityId?: string) => {
+    if (!entityId) return [];
+    return historyCacheRef.current.get(entityId) ?? historySeriesByEntityId[entityId] ?? [];
+  };
 
   const getAverageTemperature = (): { display: string; unit: string } | null => {
     const temps: Array<{ value: number; unit: string }> = [];
@@ -197,8 +257,12 @@ const PlantSensorCardComponent: React.FC<PlantSensorCardProps> = ({
 
               {/* Sensors */}
               <div className="flex flex-col gap-1 w-full mt-auto">
-                {renderSensorRow(plant.humidityEntity, <Droplets className="w-3 h-3" />, 100, 0)}
                 {renderSensorRow(plant.moistureEntity, <Sprout className="w-3 h-3" />, 100, 0)}
+              </div>
+
+              {/* History graph (moisture) */}
+              <div className="mt-1">
+                <MiniSparkline values={getSeries(plant.moistureEntity)} />
               </div>
             </div>
           ))}
