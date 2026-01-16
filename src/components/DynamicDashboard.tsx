@@ -21,6 +21,7 @@ import { LinkCard } from "./cards/LinkCard";
 import { PlantSensorCard } from "./cards/PlantSensorCard";
 import { Card, CardErrorBoundary } from "./cards/Card";
 import { dashboardService } from "../services/dashboardService";
+import { DashboardHeader } from "./DashboardHeader";
 
 interface DynamicDashboardProps {
   dashboard: Dashboard;
@@ -195,10 +196,22 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
     }
   };
 
-  const handleToggleEditMode = () => {
-    const newPath = isEditMode ? location.pathname : `${location.pathname}?edit=true`;
+  const getSearchWithEdit = (enableEdit: boolean) => {
+    const params = new URLSearchParams(location.search);
+    if (enableEdit) {
+      params.set("edit", "true");
+    } else {
+      params.delete("edit");
+    }
+    const search = params.toString();
+    return search ? `?${search}` : "";
+  };
 
-    navigate(newPath);
+  const handleToggleEditMode = () => {
+    navigate({
+      pathname: location.pathname,
+      search: getSearchWithEdit(!isEditMode),
+    });
 
     if (onNotification) {
       onNotification(isEditMode ? "Edit mode disabled" : "Edit mode enabled - Hold background for 5s to disable");
@@ -653,7 +666,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
   return (
     <>
       <div
-        className="min-h-screen p-6"
+        className="min-h-screen px-6 pb-6 pt-0"
         style={{
           background: dashboard.backgroundColor?.startsWith("#")
             ? dashboard.backgroundColor
@@ -667,6 +680,8 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
             : "#0f0f0f",
         }}
       >
+        <DashboardHeader dashboard={dashboard} isEditMode={isEditMode} onToggleEditMode={handleToggleEditMode} onOpenSettings={() => setShowDashboardSettingsModal(true)} />
+
         <div
           className={`dashboard-grid ${isEditMode ? "edit-mode-grid" : ""}`}
           style={{
@@ -746,17 +761,6 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
         {/* Edit Mode Indicator & Add Card Button */}
         {isEditMode && (
           <>
-            <button
-              onClick={() => setShowDashboardSettingsModal(true)}
-              className="fixed top-4 right-4 bg-yellow-500/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-40 hover:bg-yellow-600/90 transition-all duration-200 hover:scale-105 cursor-pointer group"
-              title="Dashboard Settings"
-            >
-              <Settings className="w-4 h-4 text-black" />
-              <span className="text-black font-medium text-sm">Edit Mode</span>
-              <div className="absolute top-full mt-2 right-0 bg-gray-800 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                Click to edit dashboard settings
-              </div>
-            </button>
             <button
               onClick={() => setShowAddCardModal(true)}
               className="fixed bottom-8 right-8 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-full shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-110 z-40 group"

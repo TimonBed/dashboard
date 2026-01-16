@@ -11,11 +11,13 @@ import { Notification } from "./components/Notification";
 import { dashboardService } from "./services/dashboardService";
 import { Dashboard } from "./types/dashboard";
 import { useHomeAssistant } from "./hooks/useHomeAssistant";
+import { useSettingsStore } from "./store/useSettingsStore";
 
 function App() {
   // Keep HA connection alive for all routes (including direct loads like /annapc)
   useHomeAssistant();
 
+  const { defaultDashboardPath } = useSettingsStore();
   const location = useLocation();
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [notification, setNotification] = useState<string | null>(null);
@@ -71,12 +73,15 @@ function App() {
     />
   );
 
+  const resolvedDefaultPath =
+    dashboards.find((d) => d.path === defaultDashboardPath)?.path || defaultDashboardPath || dashboards[0]?.path || "/tabletdashboard";
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {!hideSidebar && <Sidebar onDashboardsChange={handleDashboardChange} />}
       <div className={`flex-1 ${hideSidebar ? "ml-0" : "ml-16"}`}>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Navigate to={resolvedDefaultPath} replace />} />
           <Route path="/tabletdashboard" element={<TabletDashboard />} />
           <Route path="/debug" element={<WebSocketDebugPage />} />
           <Route path="/tests" element={<UITestsPage />} />

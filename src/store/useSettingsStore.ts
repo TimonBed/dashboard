@@ -6,6 +6,7 @@ export interface SettingsState {
   homeAssistantToken: string;
   openWeatherApiKey: string;
   autoConnect: boolean;
+  defaultDashboardPath: string;
 }
 
 interface SettingsActions {
@@ -19,6 +20,7 @@ const defaultSettings: SettingsState = {
   homeAssistantToken: import.meta.env.VITE_HA_TOKEN || "",
   openWeatherApiKey: import.meta.env.VITE_OPENWEATHER_API_KEY || "",
   autoConnect: true,
+  defaultDashboardPath: "/tabletdashboard",
 };
 
 export const useSettingsStore = create<SettingsState & SettingsActions>()(
@@ -65,7 +67,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
     }),
     {
       name: "dashboard-settings",
-      version: 1,
+      version: 2,
     }
   )
 );

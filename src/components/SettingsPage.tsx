@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Settings, Save, Wifi, Eye, EyeOff, Cloud } from "lucide-react";
 import { useSettingsStore } from "../store/useSettingsStore";
+import { dashboardService } from "../services/dashboardService";
+import { Dashboard } from "../types/dashboard";
 
 export const SettingsPage: React.FC = () => {
-  const { homeAssistantIP, homeAssistantToken, openWeatherApiKey, autoConnect, updateSettings } = useSettingsStore();
+  const { homeAssistantIP, homeAssistantToken, openWeatherApiKey, autoConnect, defaultDashboardPath, updateSettings } = useSettingsStore();
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [dashboards, setDashboards] = useState<Dashboard[]>([]);
 
   const versionLabel = `v${__APP_VERSION__} (build ${__BUILD_NUMBER__}${__BUILD_SHA__ ? `, ${__BUILD_SHA__}` : ""})`;
 
@@ -34,6 +37,18 @@ export const SettingsPage: React.FC = () => {
   const handleInputChange = (field: string, value: string | boolean) => {
     updateSettings({ [field]: value });
   };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const loaded = await dashboardService.getAllDashboards();
+        setDashboards(loaded);
+      } catch {
+        setDashboards([]);
+      }
+    };
+    load();
+  }, []);
 
   const validateHost = (host: string): boolean => {
     if (!host) return true; // Allow empty for optional validation
@@ -149,6 +164,37 @@ export const SettingsPage: React.FC = () => {
                   <span className="ml-2 text-sm font-medium text-gray-700">Auto-connect on startup</span>
                 </label>
                 <p className="mt-1 text-sm text-gray-500">Automatically attempt to connect to Home Assistant when the dashboard loads</p>
+              </div>
+            </div>
+
+            {/* Dashboard Section */}
+            <div className="mb-8">
+              <div className="flex items-center mb-4">
+                <Settings className="w-5 h-5 text-blue-600 mr-2" />
+                <h2 className="text-xl font-semibold text-gray-900">Dashboards</h2>
+              </div>
+
+              <div className="mb-2">
+                <label htmlFor="default-dashboard" className="block text-sm font-medium text-gray-700 mb-2">
+                  Default Dashboard
+                </label>
+                <select
+                  id="default-dashboard"
+                  value={defaultDashboardPath}
+                  onChange={(e) => handleInputChange("defaultDashboardPath", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                >
+                  {dashboards.length === 0 ? (
+                    <option value={defaultDashboardPath}>Loading...</option>
+                  ) : (
+                    dashboards.map((d) => (
+                      <option key={d.id} value={d.path}>
+                        {d.title} ({d.path})
+                      </option>
+                    ))
+                  )}
+                </select>
+                <p className="mt-1 text-sm text-gray-500">Used when opening the app at the root URL.</p>
               </div>
             </div>
 
