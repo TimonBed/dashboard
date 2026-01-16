@@ -225,6 +225,47 @@ export const CARD_REQUIREMENTS: Record<string, CardTypeRequirements> = {
       },
     ],
   },
+  "network-status": {
+    type: "network-status",
+    label: "Network Status",
+    requiredFields: [
+      {
+        name: "downloadThroughputEntityId",
+        type: "string",
+        label: "Download throughput entity",
+        placeholder: "sensor.ucg_ultra_wan_download_throughput",
+        description: "Current download throughput sensor",
+      },
+      {
+        name: "maxDownloadThroughputEntityId",
+        type: "string",
+        label: "Max download entity",
+        placeholder: "sensor.ucg_ultra_wan_max_download",
+        description: "Max/peak download throughput sensor",
+      },
+      {
+        name: "uploadThroughputEntityId",
+        type: "string",
+        label: "Upload throughput entity",
+        placeholder: "sensor.ucg_ultra_wan_upload_throughput",
+        description: "Current upload throughput sensor",
+      },
+      {
+        name: "maxUploadThroughputEntityId",
+        type: "string",
+        label: "Max upload entity",
+        placeholder: "sensor.ucg_ultra_wan_max_upload",
+        description: "Max/peak upload throughput sensor",
+      },
+      {
+        name: "latencyEntityId",
+        type: "string",
+        label: "Latency entity",
+        placeholder: "sensor.ucg_ultra_cloudflare_wan_latency",
+        description: "WAN latency sensor (ms)",
+      },
+    ],
+  },
 };
 
 /**

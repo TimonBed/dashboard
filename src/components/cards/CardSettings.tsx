@@ -4,6 +4,43 @@ import { useHomeAssistantStore } from "../../store/useHomeAssistantStore";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { getCardRequirements, validateCardConfig } from "../../types/cardRequirements";
 
+const formatFieldLabel = (name: string) => {
+  // Convert camelCase / PascalCase / dotted paths into a friendly label
+  const base = name.split(".").slice(-1)[0];
+  return base
+    .replace(/([A-Z])/g, " $1")
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^./, (c) => c.toUpperCase());
+};
+
+const getByPath = (obj: any, path: string) => {
+  if (!obj) return undefined;
+  return path.split(".").reduce((acc, key) => (acc && typeof acc === "object" ? acc[key] : undefined), obj);
+};
+
+const setByPath = (obj: any, path: string, value: any) => {
+  const parts = path.split(".");
+  const root = { ...(obj || {}) };
+  let cur: any = root;
+  for (let i = 0; i < parts.length; i++) {
+    const key = parts[i];
+    if (i === parts.length - 1) {
+      if (value === undefined) {
+        delete cur[key];
+      } else {
+        cur[key] = value;
+      }
+      break;
+    }
+    const next = cur[key];
+    cur[key] = next && typeof next === "object" && !Array.isArray(next) ? { ...next } : {};
+    cur = cur[key];
+  }
+  return root;
+};
+
 interface CardSettingsProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,6 +65,7 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [plantTab, setPlantTab] = useState(0);
   const [plantsDraft, setPlantsDraft] = useState<any[]>([]);
+  const [entitySettingsDraft, setEntitySettingsDraft] = useState<Record<string, string>>({});
 
   const { entities } = useHomeAssistantStore();
 
@@ -110,6 +148,45 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
     } else {
       setPlantsDraft([]);
     }
+
+    // Initialize entity settings draft (for multi-entity cards)
+    if (cardConfig?.type) {
+      const requirements = getCardRequirements(cardConfig.type);
+      const paths: string[] = [];
+
+      // Prefer explicit requirements order, excluding the common entityId (handled separately)
+      for (const field of requirements?.requiredFields || []) {
+        if (field.type === "string" && field.name !== "entityId") paths.push(field.name);
+      }
+
+      // Also include any existing entity-like fields in config (including optional ones)
+      const configKeys = Object.keys(cardConfig || {});
+      for (const key of configKeys) {
+        if (key === "entityId") continue;
+        const val = (cardConfig as any)[key];
+        if (typeof val === "string" && key.toLowerCase().includes("entity")) {
+          if (!paths.includes(key)) paths.push(key);
+        }
+        if (val && typeof val === "object" && !Array.isArray(val) && key.endsWith("Settings")) {
+          for (const [subKey, subVal] of Object.entries(val)) {
+            if (typeof subVal === "string" && subKey.toLowerCase().includes("entity")) {
+              const p = `${key}.${subKey}`;
+              if (!paths.includes(p)) paths.push(p);
+            }
+          }
+        }
+      }
+
+      // Build controlled values
+      const nextDraft: Record<string, string> = {};
+      for (const path of paths) {
+        const current = getByPath(cardConfig, path);
+        nextDraft[path] = typeof current === "string" ? current : "";
+      }
+      setEntitySettingsDraft(nextDraft);
+    } else {
+      setEntitySettingsDraft({});
+    }
   }, [title, entityId, cardConfig, isOpen]);
 
   // Fetch history when history tab is opened
@@ -120,27 +197,39 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
   }, [activeTab, editedEntityId]);
 
   const handleSave = () => {
-    // For plant cards, persist per-plant entity configuration via JSON save,
-    // while still updating the title via the regular save callback.
-    if (cardConfig?.type === "plant-sensor") {
-      const updatedConfig = {
+    // Prefer saving the full config when available (so entity-settings are persisted).
+    if (onSaveJson) {
+      let updatedConfig: any = {
         ...(cardConfig || {}),
         title: editedTitle,
         entityId: editedEntityId || undefined,
-        plants: plantsDraft.map((p, i) => ({
-          id: p.id || `plant-${i + 1}`,
-          name: p.name || `Plant ${i + 1}`,
-          batteryEntity: p.batteryEntity || undefined,
-          humidityEntity: p.humidityEntity || undefined,
-          moistureEntity: p.moistureEntity || undefined,
-          temperatureEntity: p.temperatureEntity || undefined,
-          image: p.image || undefined,
-        })),
       };
-      onSaveJson?.(updatedConfig);
-    }
 
-    onSave(editedTitle, editedEntityId);
+      // Persist multi-entity draft fields (network-status, time-remaining optional entities, etc.)
+      for (const [path, value] of Object.entries(entitySettingsDraft)) {
+        updatedConfig = setByPath(updatedConfig, path, value.trim() ? value.trim() : undefined);
+      }
+
+      // Plant card special handling: persist per-plant entity configuration.
+      if (cardConfig?.type === "plant-sensor") {
+        updatedConfig = {
+          ...updatedConfig,
+          plants: plantsDraft.map((p, i) => ({
+            id: p.id || `plant-${i + 1}`,
+            name: p.name || `Plant ${i + 1}`,
+            batteryEntity: p.batteryEntity || undefined,
+            humidityEntity: p.humidityEntity || undefined,
+            moistureEntity: p.moistureEntity || undefined,
+            temperatureEntity: p.temperatureEntity || undefined,
+            image: p.image || undefined,
+          })),
+        };
+      }
+
+      onSaveJson(updatedConfig);
+    } else {
+      onSave(editedTitle, editedEntityId);
+    }
     onClose();
   };
 
@@ -246,6 +335,43 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
     return "🏠";
   };
 
+  const renderEntityPreview = (id?: string) => {
+    const entityId = (id || "").trim();
+    if (!entityId) return null;
+    const entity = entities.get(entityId);
+
+    if (!entity) {
+      return (
+        <div className="mt-1.5 px-2 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center justify-between gap-2">
+          <div className="text-[10px] text-yellow-300 truncate" title={entityId}>
+            Not found
+          </div>
+          <div className="text-[10px] text-yellow-200 font-mono truncate max-w-[14rem]" title={entityId}>
+            {entityId}
+          </div>
+        </div>
+      );
+    }
+
+    const isBad = entity.state === "unavailable" || entity.state === "unknown";
+    const name = entity.attributes.friendly_name || entity.entity_id;
+    return (
+      <div
+        className={`mt-1.5 px-2 py-1 rounded-lg border flex items-center gap-2 ${
+          isBad ? "bg-amber-500/10 border-amber-500/20" : "bg-green-500/10 border-green-500/20"
+        }`}
+        title={entity.entity_id}
+      >
+        <div className="text-[10px] opacity-80">{getEntityIcon(entity)}</div>
+        <div className={`text-[10px] font-medium truncate flex-1 ${isBad ? "text-amber-300" : "text-green-300"}`}>{name}</div>
+        <div className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isBad ? "bg-amber-500/20 text-amber-100" : "bg-green-500/20 text-green-100"}`}>
+          {entity.state}
+        </div>
+        <div className="text-[10px] text-gray-500 tabular-nums">{new Date(entity.last_updated).toLocaleTimeString()}</div>
+      </div>
+    );
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && e.ctrlKey) {
       handleSave();
@@ -257,6 +383,9 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
   if (!isOpen) return null;
 
   const isSaveDisabled = activeTab === "json" && (jsonError !== "" || !jsonValue.trim());
+
+  const requirementsForType = cardConfig?.type ? getCardRequirements(cardConfig.type) : undefined;
+  const requirementByName = new Map((requirementsForType?.requiredFields || []).map((f) => [f.name, f]));
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -360,6 +489,45 @@ export const CardSettings: React.FC<CardSettingsProps> = ({ isOpen, onClose, tit
                   autoFocus
                 />
               </div>
+
+              {/* Entity Settings (multi-entity cards) */}
+              {cardConfig?.type !== "plant-sensor" && Object.keys(entitySettingsDraft).length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-white">Entity Settings</h3>
+                    <div className="text-xs text-gray-400">Additional entities for this card</div>
+                  </div>
+
+                  <div className="bg-gray-800/30 border border-gray-700/50 rounded-2xl p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.keys(entitySettingsDraft).map((path) => {
+                        const baseName = path.split(".").slice(-1)[0];
+                        const req = requirementByName.get(path) || requirementByName.get(baseName);
+                        const label = req?.label || formatFieldLabel(baseName);
+                        const placeholder = req?.placeholder || "sensor.example_entity";
+                        const description = req?.description;
+                        const currentValue = entitySettingsDraft[path] || "";
+
+                        return (
+                          <div key={path}>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
+                            <input
+                              type="text"
+                              value={currentValue}
+                              onChange={(e) => setEntitySettingsDraft((prev) => ({ ...prev, [path]: e.target.value }))}
+                              onKeyDown={handleKeyDown}
+                              className="w-full px-4 py-3 bg-gray-900/40 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                              placeholder={placeholder}
+                            />
+                            {description ? <div className="text-xs text-gray-500 mt-1">{description}</div> : null}
+                            {renderEntityPreview(currentValue)}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Plant Sensor Settings */}
               {cardConfig?.type === "plant-sensor" && (

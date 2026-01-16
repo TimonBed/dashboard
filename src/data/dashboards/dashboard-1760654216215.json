@@ -49,6 +49,25 @@
           }
         },
         {
+          "id": "network-status-anna",
+          "type": "network-status",
+          "title": "Network",
+          "downloadThroughputEntityId": "sensor.fritz_box_7590_ax_download_throughput",
+          "maxDownloadThroughputEntityId": "sensor.fritz_box_7590_ax_max_connection_download_throughput",
+          "uploadThroughputEntityId": "sensor.fritz_box_7590_ax_upload_throughput",
+          "maxUploadThroughputEntityId": "sensor.fritz_box_7590_ax_max_connection_upload_throughput",
+          "latencyEntityId": "sensor.ucg_ultra_cloudflare_wan_latency",
+          "externalIpEntityId": "sensor.fritz_box_7590_ax_external_ip",
+          "position": {
+            "x": 2,
+            "y": 0
+          },
+          "size": {
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
           "type": "room-section",
           "cards": [],
           "position": {
@@ -340,7 +359,7 @@
   ],
   "layout": "grid",
   "createdAt": "2025-10-16T22:36:56.215Z",
-  "updatedAt": "2025-10-19T21:35:06.243Z",
+  "updatedAt": "2026-01-16T00:00:00.000Z",
   "minColumns": 3,
   "minRows": 5
 }

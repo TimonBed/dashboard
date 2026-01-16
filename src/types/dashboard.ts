@@ -51,7 +51,8 @@ export interface DashboardCard {
     | "calendar"
     | "weather"
     | "link"
-    | "plant-sensor";
+    | "plant-sensor"
+    | "network-status";
   title: string;
   entityId?: string;
   icon?: string;
@@ -103,6 +104,14 @@ export interface DashboardCard {
 
   // Time Remaining specific fields
   remainingTimeEntityId?: string;
+
+  // Network Status specific fields
+  downloadThroughputEntityId?: string;
+  uploadThroughputEntityId?: string;
+  maxDownloadThroughputEntityId?: string;
+  maxUploadThroughputEntityId?: string;
+  latencyEntityId?: string;
+  externalIpEntityId?: string;
 }
 
 export interface Dashboard {

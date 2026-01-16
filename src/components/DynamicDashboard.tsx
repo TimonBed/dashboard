@@ -19,6 +19,7 @@ import { CalendarCard } from "./cards/CalendarCard";
 import { WeatherCard } from "./cards/WeatherCard";
 import { LinkCard } from "./cards/LinkCard";
 import { PlantSensorCard } from "./cards/PlantSensorCard";
+import { NetworkStatusCard } from "./cards/NetworkStatusCard";
 import { Card, CardErrorBoundary } from "./cards/Card";
 import { dashboardService } from "../services/dashboardService";
 import { DashboardHeader } from "./DashboardHeader";
@@ -558,6 +559,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
       weather: WeatherCard,
       link: LinkCard,
       "plant-sensor": PlantSensorCard,
+      "network-status": NetworkStatusCard,
     };
 
     const CardComponent = cardComponents[card.type];
@@ -591,6 +593,14 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({ dashboard, o
         moistureEntity: card.moistureEntity,
         temperatureEntity: card.temperatureEntity,
         image: card.image,
+      }),
+      ...(card.type === "network-status" && {
+        downloadThroughputEntityId: card.downloadThroughputEntityId,
+        uploadThroughputEntityId: card.uploadThroughputEntityId,
+        maxDownloadThroughputEntityId: card.maxDownloadThroughputEntityId,
+        maxUploadThroughputEntityId: card.maxUploadThroughputEntityId,
+        latencyEntityId: card.latencyEntityId,
+        externalIpEntityId: card.externalIpEntityId,
       }),
     };
 
